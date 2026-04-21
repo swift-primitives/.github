@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Architectural questions and design discussions
+    url: https://github.com/swift-primitives/swift-primitives/discussions
+    about: Use Discussions for design questions that are not bugs.
+  - name: Security vulnerability
+    url: https://github.com/swift-primitives/swift-primitives/security/advisories/new
+    about: Report security issues privately via a Security Advisory, not an Issue.
+  - name: Ecosystem-wide question
+    url: https://github.com/swift-institute/swift-institute/discussions
+    about: For questions spanning multiple Swift Institute layers, use the ecosystem-level Discussions.
