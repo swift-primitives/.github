@@ -80,7 +80,6 @@ jobs:
         with:
           path: .build
           key: linux-embedded-${{ inputs.cache-key-prefix }}-${{ hashFiles('Package.swift', 'Package@*.swift') }}
-          restore-keys: linux-embedded-${{ inputs.cache-key-prefix }}-
 
       - name: Build (Embedded)
         run: swift build -Xswiftc -enable-experimental-feature -Xswiftc Embedded
