@@ -49,7 +49,6 @@ jobs:
   matrix:
     uses: swift-institute/.github/.github/workflows/swift-ci.yml@main
     with:
-      cache-key-prefix: ${{ inputs.cache-key-prefix }}
       enable-private-repos: ${{ inputs.enable-private-repos }}
     secrets:
       PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
