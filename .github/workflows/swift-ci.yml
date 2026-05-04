@@ -1,0 +1,85 @@
+name: Swift CI (primitives layer)
+
+# Layer wrapper for swift-institute/.github/.github/workflows/swift-ci.yml.
+#
+# Encodes the L1 layer invariants that swift-institute's universal reusable
+# does not (and should not) carry. Currently:
+#   - Embedded build verification: every primitives package MUST be
+#     buildable under `-enable-experimental-feature Embedded` against the
+#     Swift 6.4-dev nightly Linux container. This is the CI manifestation
+#     of [PRIM-FOUND-001] (Foundation-free) extended into freestanding-
+#     buildability per swift-package-build [PKG-BUILD-007]/[PKG-BUILD-008].
+#     A package that cannot satisfy this invariant is, by that fact, not
+#     a primitive — it belongs at L2 or L3.
+#
+# The embedded job runs with continue-on-error: true (matches linux-nightly
+# precedent; the embedded job uses the nightly container and inherits its
+# instability profile during the 6.4-dev development window).
+#
+# Consume from a caller package's .github/workflows/ci.yml via:
+#
+#   jobs:
+#     ci:
+#       uses: swift-primitives/.github/.github/workflows/swift-ci.yml@main
+#       with:
+#         enable-private-repos: true       # only if package depends on private repos
+#       secrets:
+#         PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+#
+# `enable-embedded-check` is intentionally NOT exposed as an input — embedded
+# buildability is a layer invariant for L1 primitives, not a per-package opt-in.
+
+on:
+  workflow_call:
+    inputs:
+      cache-key-prefix:
+        type: string
+        default: "swift63-spm-v1"
+        description: "Cache-key prefix, typically '{swift-version tag}-spm-v{cache bump}'."
+      enable-private-repos:
+        type: boolean
+        default: false
+        description: "If true, configure git to use PRIVATE_REPO_TOKEN for github.com clones."
+    secrets:
+      PRIVATE_REPO_TOKEN:
+        required: false
+
+jobs:
+  # Universal matrix delegated to the ecosystem-wide reusable.
+  matrix:
+    uses: swift-institute/.github/.github/workflows/swift-ci.yml@main
+    with:
+      cache-key-prefix: ${{ inputs.cache-key-prefix }}
+      enable-private-repos: ${{ inputs.enable-private-repos }}
+    secrets:
+      PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+
+  # L1 invariant: Foundation-free per [PRIM-FOUND-001] +
+  # freestanding-buildable per [PKG-BUILD-007]/[PKG-BUILD-008].
+  embedded:
+    name: Ubuntu (Swift 6.4-dev nightly, Embedded build)
+    runs-on: ubuntu-latest
+    container: swiftlang/swift:nightly-main-jammy
+    continue-on-error: true
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - if: inputs.enable-private-repos
+        name: Configure git for private repos
+        run: git config --global url."https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Print Swift version
+        run: swift --version
+
+      - name: Cache Swift packages
+        uses: actions/cache@v5
+        with:
+          path: .build
+          key: linux-embedded-${{ inputs.cache-key-prefix }}-${{ hashFiles('Package.swift', 'Package@*.swift') }}
+          restore-keys: linux-embedded-${{ inputs.cache-key-prefix }}-
+
+      - name: Build (Embedded)
+        run: swift build -Xswiftc -enable-experimental-feature -Xswiftc Embedded
