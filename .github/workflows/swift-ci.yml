@@ -47,6 +47,7 @@ on:
 jobs:
   # Universal matrix delegated to the ecosystem-wide reusable.
   matrix:
+    if: ${{ !github.event.repository.private }}
     uses: swift-institute/.github/.github/workflows/swift-ci.yml@main
     with:
       enable-private-repos: ${{ inputs.enable-private-repos }}
@@ -57,6 +58,7 @@ jobs:
   # freestanding-buildable per [PKG-BUILD-007]/[PKG-BUILD-008].
   embedded:
     name: Ubuntu (Swift 6.4-dev nightly, Embedded build)
+    if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     container: swiftlang/swift:nightly-main-jammy
     continue-on-error: true
