@@ -272,8 +272,10 @@ jobs:
   # our PR-time feedback. Build-only via `xcodebuild build` (no test
   # execution; iOS-family Simulator tests would require boot + would not
   # add signal beyond compile correctness for L1 primitives' pure-compute
-  # surface). Same advisory pattern as γ-3: 4-week classified soak,
-  # flip to gating after 2 consecutive clean weekly sweeps.
+  # surface). Same 4-week classified soak as γ-3 with five-class failure
+  # tracking (package-actionable / toolchain / SDK install / workflow /
+  # known-unsupported). Flip to gating after 2 consecutive clean weekly
+  # sweeps with no package-actionable failures.
   apple-simulator-build:
     name: macOS (Swift 6.3, debug, ${{ matrix.platform }} Simulator build)
     if: ${{ !github.event.repository.private }}
