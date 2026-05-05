@@ -77,6 +77,46 @@ jobs:
       - name: Build (Embedded)
         run: swift build -Xswiftc -enable-experimental-feature -Xswiftc Embedded
 
+  # γ-3 advisory — Embedded Wasm SDK build verification on stable Swift 6.3
+  # (per swiftlang/swift-syntax precedent: stable, not nightly). 4-week
+  # classified soak per research §3.4.6 with five-class failure tracking
+  # (package-actionable / toolchain / SDK install / workflow / known-unsupported).
+  # Flip on "no package-actionable failures + no toolchain instability for 2
+  # consecutive weekly sweeps."
+  embedded-wasm-sdk:
+    name: Ubuntu (Swift 6.3, Embedded Wasm SDK build)
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    container: swift:6.3
+    continue-on-error: true     # γ-3 advisory; classified soak. Drop after flip.
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - if: inputs.enable-private-repos
+        name: Configure git for private repos
+        run: git config --global url."https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Print Swift version
+        run: swift --version
+
+      - name: Install Embedded Wasm SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Official Swift 6.3 Wasm SDK artifact bundle from swift.org.
+          # Bundle includes both wasi and embedded SDK variants; we use the
+          # `-embedded` variant via --swift-sdk below.
+          # Source: https://www.swift.org/documentation/articles/wasm-getting-started.html
+          swift sdk install \
+            https://download.swift.org/swift-6.3-release/wasm-sdk/swift-6.3-RELEASE/swift-6.3-RELEASE_wasm.artifactbundle.tar.gz \
+            --checksum 9fa4016ee632c7e9e906608ec3b55cf13dfc4dff44e47574c5af58064dc33fd9
+
+      - name: Build (Embedded Wasm)
+        run: swift build --swift-sdk swift-6.3-RELEASE_wasm-embedded
+
   # Universal matrix delegated to the ecosystem-wide reusable. Declared
   # after `embedded` so the layer-specific build groups visually with
   # the matrix builds (macOS/Ubuntu/Windows) in the consumer's CI sidebar.
