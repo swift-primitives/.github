@@ -45,17 +45,10 @@ on:
         required: false
 
 jobs:
-  # Universal matrix delegated to the ecosystem-wide reusable.
-  matrix:
-    if: ${{ !github.event.repository.private }}
-    uses: swift-institute/.github/.github/workflows/swift-ci.yml@main
-    with:
-      enable-private-repos: ${{ inputs.enable-private-repos }}
-    secrets:
-      PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
-
   # L1 invariant: Foundation-free per [PRIM-FOUND-001] +
   # freestanding-buildable per [PKG-BUILD-007]/[PKG-BUILD-008].
+  # Declared first so it appears alongside the universal-matrix builds
+  # in the consumer's CI sidebar (rather than orphaned at the bottom).
   embedded:
     name: Ubuntu (Swift 6.4-dev nightly, Embedded build)
     if: ${{ !github.event.repository.private }}
@@ -83,3 +76,14 @@ jobs:
 
       - name: Build (Embedded)
         run: swift build -Xswiftc -enable-experimental-feature -Xswiftc Embedded
+
+  # Universal matrix delegated to the ecosystem-wide reusable. Declared
+  # after `embedded` so the layer-specific build groups visually with
+  # the matrix builds (macOS/Ubuntu/Windows) in the consumer's CI sidebar.
+  matrix:
+    if: ${{ !github.event.repository.private }}
+    uses: swift-institute/.github/.github/workflows/swift-ci.yml@main
+    with:
+      enable-private-repos: ${{ inputs.enable-private-repos }}
+    secrets:
+      PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
