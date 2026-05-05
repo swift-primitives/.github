@@ -140,6 +140,131 @@ jobs:
       - name: Build (Embedded Wasm)
         run: swift build --swift-sdk "${WASM_SDK_ID}"
 
+  # Advisory — Android cross-compile build verification on stable Swift 6.3
+  # via the official swift.org Android SDK. Same dynamic-resolution pattern
+  # as embedded-wasm-sdk: the SDK is paired to the container's Swift
+  # toolchain at run-time. Targets aarch64-android by default (the SDK
+  # bundle's single variant). Same 4-week classified soak as γ-3 with
+  # five-class failure tracking. Flip to gating on "no package-actionable
+  # failures for 2 consecutive weekly sweeps."
+  android-build:
+    name: Ubuntu (Swift 6.3, Android SDK build)
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    container: swift:6.3
+    continue-on-error: true     # advisory; classified soak. Drop after flip.
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - if: inputs.enable-private-repos
+        name: Configure git for private repos
+        run: git config --global url."https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Print Swift version
+        run: swift --version
+
+      - name: Resolve and install Android SDK matching container Swift
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Dynamically resolve the matching Android SDK from swift.org.
+          # The container is `swift:6.3` (rolls forward to 6.3.x); the SDK
+          # MUST match the toolchain (same ABI-pairing constraint as Wasm).
+          # Source: https://www.swift.org/install/ Android SDK section.
+          # Bundle exposes one swiftSDK variant: ${TAG}_android (verified
+          # via info.json inspection of the 6.3.1 bundle).
+          apt-get update -qq && apt-get install -qq -y curl jq
+          SWIFT_VERSION="$(swift --version | head -n1 | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -n1)"
+          echo "Container Swift version: ${SWIFT_VERSION}"
+          REC=$(curl -sf "https://www.swift.org/api/v1/install/releases.json" \
+            | jq --arg v "${SWIFT_VERSION}" '.[] | select(.name == $v)')
+          if [[ -z "$REC" ]]; then
+            echo "No swift.org release matching Swift ${SWIFT_VERSION}" >&2
+            exit 1
+          fi
+          TAG=$(echo "$REC" | jq -r '.tag')
+          CHECKSUM=$(echo "$REC" | jq -r '.platforms[] | select(.platform == "android-sdk") | .checksum')
+          if [[ -z "$CHECKSUM" || "$CHECKSUM" == "null" ]]; then
+            echo "No Android SDK published for Swift ${SWIFT_VERSION}" >&2
+            exit 1
+          fi
+          SDK_URL="https://download.swift.org/swift-${SWIFT_VERSION}-release/android-sdk/${TAG}/${TAG}_android.artifactbundle.tar.gz"
+          echo "Resolved tag:      ${TAG}"
+          echo "Resolved checksum: ${CHECKSUM}"
+          echo "Resolved URL:      ${SDK_URL}"
+          swift sdk install "${SDK_URL}" --checksum "${CHECKSUM}"
+          echo "ANDROID_SDK_ID=${TAG}_android" >> "$GITHUB_ENV"
+
+      - name: Build (Android)
+        run: swift build --swift-sdk "${ANDROID_SDK_ID}"
+
+  # γ-3b advisory — Static Linux musl build verification on stable Swift 6.3
+  # via the official swift.org Static Linux SDK. Tests a different invariant
+  # than embedded: "no glibc dynamic linkage" — the resulting binary links
+  # only musl statically and runs on any Linux distribution. Per research
+  # §3.4.6 may stay advisory permanently (different value-class than the
+  # gate-on-flip Wasm/Android jobs).
+  # Bundle URL convention includes the SDK version (currently 0.1.0)
+  # exposed in releases.json as the static-sdk platform's `version` field.
+  static-linux-musl-build:
+    name: Ubuntu (Swift 6.3, Static Linux musl build)
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    container: swift:6.3
+    continue-on-error: true     # γ-3b advisory; may remain permanently.
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - if: inputs.enable-private-repos
+        name: Configure git for private repos
+        run: git config --global url."https://${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Print Swift version
+        run: swift --version
+
+      - name: Resolve and install Static Linux SDK matching container Swift
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Dynamically resolve the matching Static Linux SDK from swift.org.
+          # Source: https://www.swift.org/documentation/articles/static-linux-getting-started.html
+          # Bundle URL pattern includes the SDK's own version (the platform
+          # entry's `version` field in releases.json — currently 0.1.0).
+          # SDK ID is triple-based: x86_64-swift-linux-musl (we run on
+          # ubuntu-latest = x86_64).
+          apt-get update -qq && apt-get install -qq -y curl jq
+          SWIFT_VERSION="$(swift --version | head -n1 | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -n1)"
+          echo "Container Swift version: ${SWIFT_VERSION}"
+          REC=$(curl -sf "https://www.swift.org/api/v1/install/releases.json" \
+            | jq --arg v "${SWIFT_VERSION}" '.[] | select(.name == $v)')
+          if [[ -z "$REC" ]]; then
+            echo "No swift.org release matching Swift ${SWIFT_VERSION}" >&2
+            exit 1
+          fi
+          TAG=$(echo "$REC" | jq -r '.tag')
+          STATIC_REC=$(echo "$REC" | jq '.platforms[] | select(.platform == "static-sdk")')
+          CHECKSUM=$(echo "$STATIC_REC" | jq -r '.checksum')
+          STATIC_VERSION=$(echo "$STATIC_REC" | jq -r '.version')
+          if [[ -z "$CHECKSUM" || "$CHECKSUM" == "null" ]]; then
+            echo "No Static Linux SDK published for Swift ${SWIFT_VERSION}" >&2
+            exit 1
+          fi
+          SDK_URL="https://download.swift.org/swift-${SWIFT_VERSION}-release/static-sdk/${TAG}/${TAG}_static-linux-${STATIC_VERSION}.artifactbundle.tar.gz"
+          echo "Resolved tag:      ${TAG}"
+          echo "Resolved version:  ${STATIC_VERSION}"
+          echo "Resolved checksum: ${CHECKSUM}"
+          echo "Resolved URL:      ${SDK_URL}"
+          swift sdk install "${SDK_URL}" --checksum "${CHECKSUM}"
+
+      - name: Build (Static Linux musl, x86_64)
+        run: swift build --swift-sdk x86_64-swift-linux-musl
+
   # Universal matrix delegated to the ecosystem-wide reusable. Declared
   # after `embedded` so the layer-specific build groups visually with
   # the matrix builds (macOS/Ubuntu/Windows) in the consumer's CI sidebar.
