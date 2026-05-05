@@ -35,7 +35,11 @@ on:
       cache-key-prefix:
         type: string
         default: "swift63-spm-v1"
-        description: "Cache-key prefix, typically '{swift-version tag}-spm-v{cache bump}'."
+        description: "Cache-key prefix, typically '{swift-version tag}-spm-v{cache bump}'. Used only by the embedded job (sole permitted .build cache per [CI-040])."
+      swift-version:
+        type: string
+        default: "6.3"
+        description: "Swift stable floor used for the SDK-install jobs (Wasm, Android, Static-musl) and propagated to the universal matrix. Mirrors the universal reusable's input so callers bumping the floor flip both layer and universal in one input."
       enable-private-repos:
         type: boolean
         default: true
@@ -87,7 +91,7 @@ jobs:
     name: Ubuntu (Swift 6.3, Embedded Wasm SDK build)
     if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
-    container: swift:6.3
+    container: swift:${{ inputs.swift-version }}
     continue-on-error: true     # γ-3 advisory; classified soak. Drop after flip.
     timeout-minutes: 30
     permissions:
@@ -151,7 +155,7 @@ jobs:
     name: Ubuntu (Swift 6.3, Android SDK build)
     if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
-    container: swift:6.3
+    container: swift:${{ inputs.swift-version }}
     continue-on-error: true     # advisory; classified soak. Drop after flip.
     timeout-minutes: 30
     permissions:
@@ -213,7 +217,7 @@ jobs:
     name: Ubuntu (Swift 6.3, Static Linux musl build)
     if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
-    container: swift:6.3
+    container: swift:${{ inputs.swift-version }}
     continue-on-error: true     # γ-3b advisory; may remain permanently.
     timeout-minutes: 30
     permissions:
@@ -334,6 +338,7 @@ jobs:
     if: ${{ !github.event.repository.private }}
     uses: swift-institute/.github/.github/workflows/swift-ci.yml@main
     with:
+      swift-version: ${{ inputs.swift-version }}
       enable-private-repos: ${{ inputs.enable-private-repos }}
     secrets:
       PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
