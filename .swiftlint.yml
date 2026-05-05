@@ -63,3 +63,10 @@ custom_rules:
       - 'Tests/.*\.swift'
     excluded:
       - 'Tests/Support/.*\.swift'
+  l1_no_platform_conditionals:
+    name: "L1 Primitives Are Platform-Agnostic ([PLAT-ARCH-008c])"
+    regex: '^[ \t]*#(?:if|elseif)\s+(?:!\s*)?(?:os|canImport)\s*\('
+    message: "L1 primitives MUST NOT contain '#if os(...)' or '#if canImport(...)' guards — they must be unconditionally platform-agnostic ([PLAT-ARCH-008c]). Platform-specific code belongs at L2/L3."
+    severity: error
+    included:
+      - 'Sources/.*\.swift'
