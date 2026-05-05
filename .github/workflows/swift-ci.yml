@@ -21,10 +21,14 @@ name: Swift CI (primitives layer)
 #   jobs:
 #     ci:
 #       uses: swift-primitives/.github/.github/workflows/swift-ci.yml@main
-#       with:
-#         enable-private-repos: true       # only if package depends on private repos
-#       secrets:
-#         PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+#       secrets: inherit
+#
+# Default `enable-private-repos: true` covers the canonical L1 case (most
+# primitives consumers depend on private intra-Institute siblings); pass
+# `with: { enable-private-repos: false }` only for the rare public-only
+# consumer that wants to suppress the configure-git step. `secrets:
+# inherit` is uniform across all consumers per
+# [CI-031]/[CI-058]/[CI-059] post-uniformity-sweep.
 #
 # `enable-embedded-check` is intentionally NOT exposed as an input — embedded
 # buildability is a layer invariant for L1 primitives, not a per-package opt-in.
