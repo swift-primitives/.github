@@ -120,40 +120,17 @@ jobs:
       - name: Print Swift version
         run: swift --version
 
-      - name: Resolve and install Embedded Wasm SDK matching container Swift
-        shell: bash
-        run: |
-          set -euo pipefail
-          # Dynamically resolve the matching Wasm SDK from swift.org per
-          # Research/wasm-ci-strategy-and-sdk-toolchain-coupling.md v1.0.0 §Q4 Option α.
-          # The container is `swift:6.3` (rolls forward to 6.3.x); the SDK
-          # MUST match exactly — a mismatched pair fails with `module compiled
-          # with Swift X cannot be imported by the Swift Y compiler`.
-          # Dynamic resolution avoids the patch-version-pin lockstep brittleness
-          # captured in Research/centralized-swift-ci-and-spine-gate.md §3.5.7
-          # and eliminates soak-taxonomy class C.2 by construction.
-          # Source: https://www.swift.org/documentation/articles/wasm-getting-started.html
-          apt-get update -qq && apt-get install -qq -y curl jq
-          SWIFT_VERSION="$(swift --version | head -n1 | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -n1)"
-          echo "Container Swift version: ${SWIFT_VERSION}"
-          REC=$(curl -sf "https://www.swift.org/api/v1/install/releases.json" \
-            | jq --arg v "${SWIFT_VERSION}" '.[] | select(.name == $v)')
-          if [[ -z "$REC" ]]; then
-            echo "No swift.org release matching Swift ${SWIFT_VERSION}" >&2
-            exit 1
-          fi
-          TAG=$(echo "$REC" | jq -r '.tag')
-          CHECKSUM=$(echo "$REC" | jq -r '.platforms[] | select(.platform == "wasm-sdk") | .checksum')
-          if [[ -z "$CHECKSUM" || "$CHECKSUM" == "null" ]]; then
-            echo "No Wasm SDK published for Swift ${SWIFT_VERSION}" >&2
-            exit 1
-          fi
-          SDK_URL="https://download.swift.org/swift-${SWIFT_VERSION}-release/wasm-sdk/${TAG}/${TAG}_wasm.artifactbundle.tar.gz"
-          echo "Resolved tag:      ${TAG}"
-          echo "Resolved checksum: ${CHECKSUM}"
-          echo "Resolved URL:      ${SDK_URL}"
-          swift sdk install "${SDK_URL}" --checksum "${CHECKSUM}"
-          echo "WASM_SDK_ID=${TAG}_wasm-embedded" >> "$GITHUB_ENV"
+      # Dynamic resolution per Research/wasm-ci-strategy-and-sdk-toolchain-coupling.md
+      # v1.0.0 §Q4 Option α — eliminates soak-taxonomy class C.2 by construction.
+      # The composite action handles container-Swift detection, releases.json
+      # lookup, URL construction, swift sdk install, and GITHUB_ENV write.
+      - name: Install Embedded Wasm SDK matching container Swift
+        uses: swift-institute/.github/.github/actions/install-swift-sdk@main
+        with:
+          platform: wasm-sdk
+          bundle-suffix: wasm
+          sdk-id: ${TAG}_wasm-embedded
+          output-env-var: WASM_SDK_ID
 
       - name: Build (Embedded Wasm)
         run: swift build --swift-sdk "${WASM_SDK_ID}"
