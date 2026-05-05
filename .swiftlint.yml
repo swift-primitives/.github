@@ -1,0 +1,65 @@
+# Tier 2 — swift-primitives org-specific SwiftLint configuration.
+#
+# Inherits from the swift-institute Tier 1 ecosystem-wide canonical:
+#
+#   parent_config: https://raw.githubusercontent.com/swift-institute/.github/main/.swiftlint.yml
+#
+# Per-sub-package .swiftlint.yml files in swift-primitives/swift-*-primitives/
+# inherit from THIS file via:
+#
+#   parent_config: https://raw.githubusercontent.com/swift-primitives/.github/main/.swiftlint.yml
+#
+# Phase 1 changes (2026-05-05) — see swift-institute/Research/
+# rollout-phase-1-results.md for the rationale:
+#   - Custom Foundation-import rule pair replaces the γ-1a workflow per
+#     research §3.4.2 ([PRIM-FOUND-001]). Foundation ban is primitives-specific
+#     (only L1 forbids Foundation imports across the ecosystem); the rules live
+#     here at Tier 2 rather than Tier 1 so other ecosystems do NOT inherit them.
+
+parent_config: https://raw.githubusercontent.com/swift-institute/.github/main/.swiftlint.yml
+
+# ── Custom rules ─────────────────────────────────────────────────────────────
+#
+# Per Phase 1 (2026-05-05): the no_foundation_import_* rules replace the
+# γ-1a `lint-foundation-family-import.yml` per-PR workflow + the
+# `lint-foundation-family-import-weekly.yml` cron orchestrator + the
+# audit-foundation-import.py script. Both rules use the same regex pattern
+# as the audit script (research §3.4.2), which catches all attribute and
+# access-modifier permutations:
+#
+#   import Foundation
+#   public import Foundation
+#   package import Foundation
+#   internal import Foundation
+#   fileprivate import Foundation
+#   private import Foundation
+#   @_exported import Foundation
+#   @_exported public import Foundation
+#   @_implementationOnly import Foundation
+#   @preconcurrency import Foundation
+#   @preconcurrency public import Foundation
+#   ...and combinations of the above.
+#
+# The path-based ERROR/WARNING split (Sources/** + Tests/Support/** = ERROR,
+# Tests/** elsewhere = WARNING) per research §3.4.2 is implemented as two
+# rules with disjoint `included:` filters. Both reject Foundation,
+# FoundationEssentials, FoundationInternationalization (with `\b` boundary
+# rejecting FoundationFooBar etc.).
+custom_rules:
+  no_foundation_import_error:
+    name: "No Foundation Family Import (gating)"
+    regex: '^[ \t]*(?:@[a-zA-Z_]+[ \t]+)*(?:public|package|internal|fileprivate|private)?[ \t]*import[ \t]+(Foundation|FoundationEssentials|FoundationInternationalization)\b'
+    message: "Foundation-family imports are forbidden in Sources/** and Tests/Support/** ([PRIM-FOUND-001], research §3.4.2)."
+    severity: error
+    included:
+      - 'Sources/.*\.swift'
+      - 'Tests/Support/.*\.swift'
+  no_foundation_import_warning:
+    name: "No Foundation Family Import (advisory)"
+    regex: '^[ \t]*(?:@[a-zA-Z_]+[ \t]+)*(?:public|package|internal|fileprivate|private)?[ \t]*import[ \t]+(Foundation|FoundationEssentials|FoundationInternationalization)\b'
+    message: "Foundation-family imports in Tests/** outside Tests/Support/ are flagged as warnings ([PRIM-FOUND-001], research §3.4.2)."
+    severity: warning
+    included:
+      - 'Tests/.*\.swift'
+    excluded:
+      - 'Tests/Support/.*\.swift'
