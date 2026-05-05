@@ -102,24 +102,43 @@ jobs:
       - name: Print Swift version
         run: swift --version
 
-      - name: Install Embedded Wasm SDK
+      - name: Resolve and install Embedded Wasm SDK matching container Swift
         shell: bash
         run: |
           set -euo pipefail
-          # Official Swift 6.3.1 Wasm SDK artifact bundle from swift.org.
-          # Bundle includes both wasi and embedded SDK variants; we use the
-          # `-embedded` variant via --swift-sdk below.
-          # The 6.3.1 SDK matches the swift:6.3 Docker image (which currently
-          # rolls forward to 6.3.1) — the 6.3.0 SDK had an ABI mismatch with
-          # 6.3.1 toolchain (`module compiled with Swift 6.3 cannot be imported
-          # by the Swift 6.3.1 compiler`); the 6.3.1 SDK resolves it.
+          # Dynamically resolve the matching Wasm SDK from swift.org per
+          # Research/wasm-ci-strategy-and-sdk-toolchain-coupling.md v1.0.0 §Q4 Option α.
+          # The container is `swift:6.3` (rolls forward to 6.3.x); the SDK
+          # MUST match exactly — a mismatched pair fails with `module compiled
+          # with Swift X cannot be imported by the Swift Y compiler`.
+          # Dynamic resolution avoids the patch-version-pin lockstep brittleness
+          # captured in Research/centralized-swift-ci-and-spine-gate.md §3.5.7
+          # and eliminates soak-taxonomy class C.2 by construction.
           # Source: https://www.swift.org/documentation/articles/wasm-getting-started.html
-          swift sdk install \
-            https://download.swift.org/swift-6.3.1-release/wasm-sdk/swift-6.3.1-RELEASE/swift-6.3.1-RELEASE_wasm.artifactbundle.tar.gz \
-            --checksum bd47baa20771f366d8beed7970afaa30742b2210097afd15f85427226d8f4cf2
+          apt-get update -qq && apt-get install -qq -y curl jq
+          SWIFT_VERSION="$(swift --version | head -n1 | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -n1)"
+          echo "Container Swift version: ${SWIFT_VERSION}"
+          REC=$(curl -sf "https://www.swift.org/api/v1/install/releases.json" \
+            | jq --arg v "${SWIFT_VERSION}" '.[] | select(.name == $v)')
+          if [[ -z "$REC" ]]; then
+            echo "No swift.org release matching Swift ${SWIFT_VERSION}" >&2
+            exit 1
+          fi
+          TAG=$(echo "$REC" | jq -r '.tag')
+          CHECKSUM=$(echo "$REC" | jq -r '.platforms[] | select(.platform == "wasm-sdk") | .checksum')
+          if [[ -z "$CHECKSUM" || "$CHECKSUM" == "null" ]]; then
+            echo "No Wasm SDK published for Swift ${SWIFT_VERSION}" >&2
+            exit 1
+          fi
+          SDK_URL="https://download.swift.org/swift-${SWIFT_VERSION}-release/wasm-sdk/${TAG}/${TAG}_wasm.artifactbundle.tar.gz"
+          echo "Resolved tag:      ${TAG}"
+          echo "Resolved checksum: ${CHECKSUM}"
+          echo "Resolved URL:      ${SDK_URL}"
+          swift sdk install "${SDK_URL}" --checksum "${CHECKSUM}"
+          echo "WASM_SDK_ID=${TAG}_wasm-embedded" >> "$GITHUB_ENV"
 
       - name: Build (Embedded Wasm)
-        run: swift build --swift-sdk swift-6.3.1-RELEASE_wasm-embedded
+        run: swift build --swift-sdk "${WASM_SDK_ID}"
 
   # Universal matrix delegated to the ecosystem-wide reusable. Declared
   # after `embedded` so the layer-specific build groups visually with
