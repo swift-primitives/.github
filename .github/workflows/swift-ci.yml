@@ -204,39 +204,18 @@ jobs:
       - name: Print Swift version
         run: swift --version
 
-      - name: Resolve and install Static Linux SDK matching container Swift
-        shell: bash
-        run: |
-          set -euo pipefail
-          # Dynamically resolve the matching Static Linux SDK from swift.org.
-          # Source: https://www.swift.org/documentation/articles/static-linux-getting-started.html
-          # Bundle URL pattern includes the SDK's own version (the platform
-          # entry's `version` field in releases.json — currently 0.1.0).
-          # SDK ID is triple-based: x86_64-swift-linux-musl (we run on
-          # ubuntu-latest = x86_64).
-          apt-get update -qq && apt-get install -qq -y curl jq
-          SWIFT_VERSION="$(swift --version | head -n1 | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -n1)"
-          echo "Container Swift version: ${SWIFT_VERSION}"
-          REC=$(curl -sf "https://www.swift.org/api/v1/install/releases.json" \
-            | jq --arg v "${SWIFT_VERSION}" '.[] | select(.name == $v)')
-          if [[ -z "$REC" ]]; then
-            echo "No swift.org release matching Swift ${SWIFT_VERSION}" >&2
-            exit 1
-          fi
-          TAG=$(echo "$REC" | jq -r '.tag')
-          STATIC_REC=$(echo "$REC" | jq '.platforms[] | select(.platform == "static-sdk")')
-          CHECKSUM=$(echo "$STATIC_REC" | jq -r '.checksum')
-          STATIC_VERSION=$(echo "$STATIC_REC" | jq -r '.version')
-          if [[ -z "$CHECKSUM" || "$CHECKSUM" == "null" ]]; then
-            echo "No Static Linux SDK published for Swift ${SWIFT_VERSION}" >&2
-            exit 1
-          fi
-          SDK_URL="https://download.swift.org/swift-${SWIFT_VERSION}-release/static-sdk/${TAG}/${TAG}_static-linux-${STATIC_VERSION}.artifactbundle.tar.gz"
-          echo "Resolved tag:      ${TAG}"
-          echo "Resolved version:  ${STATIC_VERSION}"
-          echo "Resolved checksum: ${CHECKSUM}"
-          echo "Resolved URL:      ${SDK_URL}"
-          swift sdk install "${SDK_URL}" --checksum "${CHECKSUM}"
+      # Bundle URL pattern includes the SDK's own version (the platform
+      # entry's `version` field in releases.json — currently 0.1.0).
+      # SDK ID is triple-based (x86_64-swift-linux-musl); composite's
+      # ${TAG}-substitution leaves it unchanged. The Build step below
+      # uses the literal triple directly, so output-env-var is omitted.
+      - name: Install Static Linux SDK matching container Swift
+        uses: swift-institute/.github/.github/actions/install-swift-sdk@main
+        with:
+          platform: static-sdk
+          bundle-suffix: static-linux
+          use-platform-version: 'true'
+          sdk-id: x86_64-swift-linux-musl
 
       - name: Build (Static Linux musl, x86_64)
         run: swift build --swift-sdk x86_64-swift-linux-musl
