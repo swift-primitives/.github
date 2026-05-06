@@ -64,11 +64,6 @@ on:
 env:
   XCODE_VERSION: "26.4"
 
-# Workflow-level deny-all default per [CI-080]; per-job permissions: blocks
-# override. workflow_call reusables: top-level permissions: is inert at call
-# time (caller's job-level grants apply); kept for consistency + dispatch path.
-permissions: {}
-
 jobs:
   # L1 invariant: Foundation-free per [PRIM-FOUND-001] +
   # freestanding-buildable per [PKG-BUILD-007]/[PKG-BUILD-008].
