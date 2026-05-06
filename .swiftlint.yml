@@ -70,3 +70,33 @@ custom_rules:
     severity: error
     included:
       - 'Sources/.*\.swift'
+  # Cardinal / Ordinal / Vector enforcement cohort (2026-05-06) — see
+  # swift-institute/Research/cardinal-ordinal-vector-enforcement-design.md
+  # v1.0.0 for the rationale and empirical baseline. Each rule flags a
+  # specific drift away from the canonical preference hierarchy
+  # ([CONV-016]) and the high-typed Cardinal/Ordinal/Affine.Discrete
+  # discipline ([INFRA-101], [INFRA-102], [INFRA-103], [INFRA-200]).
+  # Severity warning (gated to error in CI via --strict). Empirical
+  # baseline at landing: ~80-130 violations expected, concentrated in
+  # swift-buffer-primitives, swift-tree-primitives, swift-ordinal-primitives,
+  # swift-hash-table-primitives.
+  cardinal_count_minus_one_anti_pattern:
+    name: "Cardinal count - 1 Anti-Pattern ([INFRA-025])"
+    regex: '\bcount\s*-\s*1\b'
+    message: "`count - 1` indicates `count: Int` not `count: Cardinal` (the typed form would not compile per [INFRA-200]). Use `.subtract.saturating(.one)` or the appropriate typed-arithmetic form per [INFRA-025]."
+    severity: warning
+  cardinal_zero_one_constructor_anti_pattern:
+    name: "Cardinal(0) / Cardinal(1) Anti-Pattern ([INFRA-101])"
+    regex: '\bCardinal\(\s*[01]\s*\)'
+    message: "`Cardinal(0)` / `Cardinal(1)` should use the canonical accessors `.zero` / `.one` per [INFRA-101]."
+    severity: warning
+  chained_rawvalue_access_anti_pattern:
+    name: "Chained .rawValue Access Anti-Pattern ([INFRA-103])"
+    regex: '\.rawValue\.\w+'
+    message: "Chaining a member access through `.rawValue` escapes the typed system. Prefer `.retag()` (Tier 1) / `.map()` (Tier 2) / `Type.min(a, b)` per the canonical preference hierarchy [CONV-016]; see [INFRA-103]."
+    severity: warning
+  bitpattern_rawvalue_chain_anti_pattern:
+    name: "Int(bitPattern: ....rawValue) Chain Anti-Pattern ([INFRA-002])"
+    regex: 'Int\(bitPattern:\s*[^)]*\.rawValue'
+    message: "`Int(bitPattern: foo.rawValue)` chains through .rawValue and bypasses the canonical preference hierarchy. Prefer `.retag()` / `.map()` (Tier 1/2 of [CONV-016]) before resorting to the [INFRA-002] integration overload — and when you do use the overload, pass the typed value directly: `Int(bitPattern: foo)` not `Int(bitPattern: foo.rawValue)`."
+    severity: warning
