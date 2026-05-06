@@ -299,3 +299,32 @@ jobs:
       macos-runner: ${{ inputs.macos-runner }}
     secrets:
       PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+
+  # ─── Conclusion aggregator ────────────────────────────────────────────────
+  # Single required-status-check name for branch protection on swift-primitives
+  # consumer repos. Mirrors the universal swift-ci.yml's ci-ok job; here, the
+  # only need is `matrix` (which itself reflects the universal workflow's
+  # success aggregate — universal's ci-ok ensures macos-release / linux-release
+  # / windows-release / format / lint all passed before matrix succeeds).
+  #
+  # Excluded from needs: by design:
+  #   - embedded (continue-on-error: true; nightly toolchain instability)
+  #   - embedded-wasm-sdk, android-build, static-linux-musl-build,
+  #     apple-simulator-build (all continue-on-error: true; advisory soak)
+  #
+  # Branch-protection consumers require `ci-ok` only.
+  ci-ok:
+    if: ${{ always() && !github.event.repository.private }}
+    needs:
+      - matrix
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Aggregate required-job results
+        env:
+          NEEDS_JSON: ${{ toJson(needs) }}
+        run: |
+          set -euo pipefail
+          # success or skipped → pass; failure or cancelled → fail.
+          jq --exit-status 'all(.result == "success" or .result == "skipped")' <<< "$NEEDS_JSON"
