@@ -93,10 +93,23 @@ custom_rules:
   chained_rawvalue_access_anti_pattern:
     name: "Chained .rawValue Access Anti-Pattern ([INFRA-103])"
     regex: '\.rawValue\.\w+'
-    message: "Chaining a member access through `.rawValue` escapes the typed system. Prefer `.retag()` (Tier 1) / `.map()` (Tier 2) / `Type.min(a, b)` per the canonical preference hierarchy [CONV-016]; see [INFRA-103]."
+    message: "Chaining `.rawValue.method()` (or paren-wrapped `(x.rawValue).method()` — see chained_rawvalue_access_paren_evasion) escapes the typed system. Prefer `.retag()` (Tier 1) / `.map()` (Tier 2) / `Type.min(a, b)` / a typed accessor exposed by the wrapper, per [CONV-016] [INFRA-103]. If the wrapper IS what this site implements (typed-system bottom-out — options (i)-(iv) circular), escalate to supervisor and apply `// swiftlint:disable:next chained_rawvalue_access_anti_pattern  // reason: <citation>`."
+    severity: warning
+  # Companion rule (2026-05-06): catches the paren-wrapped evasion pattern
+  # `(x.rawValue).method()` separately so the message can name the
+  # evasion explicitly. Same severity as the canonical rule; same fix
+  # paths (typed accessor or supervisor-approved disable-with-reason).
+  chained_rawvalue_access_paren_evasion:
+    name: "Chained .rawValue — Paren-Wrap Evasion ([INFRA-103])"
+    regex: '\.rawValue\s*\)\.\w+'
+    message: "Paren-wrapping `(x.rawValue).method()` is regex-evasion of chained_rawvalue_access_anti_pattern, NOT a fix — semantically identical to the direct chain. Use a typed accessor exposed by the wrapper (option (iii) of [INFRA-103]) or, if the wrapper IS what this site implements (typed-system bottom-out), escalate to supervisor and apply `// swiftlint:disable:next chained_rawvalue_access_anti_pattern  // reason: <citation>`."
     severity: warning
   bitpattern_rawvalue_chain_anti_pattern:
-    name: "Int(bitPattern: ....rawValue) Chain Anti-Pattern ([INFRA-002])"
-    regex: 'Int\(bitPattern:\s*[^)]*\.rawValue'
-    message: "`Int(bitPattern: foo.rawValue)` chains through .rawValue and bypasses the canonical preference hierarchy. Prefer `.retag()` / `.map()` (Tier 1/2 of [CONV-016]) before resorting to the [INFRA-002] integration overload — and when you do use the overload, pass the typed value directly: `Int(bitPattern: foo)` not `Int(bitPattern: foo.rawValue)`."
+    name: "init(bitPattern: ....rawValue) Chain Anti-Pattern ([INFRA-002])"
+    # Broadened 2026-05-06 from `Int\(...` to `\b\w+\(...` to catch all
+    # syntactic equivalents — `Int(bitPattern:`, `UInt(bitPattern:`,
+    # `Int.init(bitPattern:`, `self.init(bitPattern:`, `Int8(bitPattern:`,
+    # etc. — that previously evaded the literal-`Int(` regex.
+    regex: '\b\w+\(bitPattern:\s*[^)]*\.rawValue'
+    message: "`init(bitPattern:)` whose argument chains through `.rawValue` — including `Int(...)`, `UInt(...)`, `Int.init(...)`, `self.init(...)`, and other syntactic equivalents — bypasses the canonical preference hierarchy. Prefer `.retag()` / `.map()` (Tier 1/2 of [CONV-016]) before resorting to the [INFRA-002] integration overload — and when you do use the overload, pass the typed value directly: `Int(bitPattern: foo)` not `Int(bitPattern: foo.rawValue)`. If this site IS the [INFRA-002] integration overload definition itself (typed-system bottom-out), escalate to supervisor and apply `// swiftlint:disable:next bitpattern_rawvalue_chain_anti_pattern  // reason: <citation>`."
     severity: warning
