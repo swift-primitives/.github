@@ -83,7 +83,30 @@ custom_rules:
   cardinal_count_minus_one_anti_pattern:
     name: "Cardinal count - 1 Anti-Pattern ([INFRA-025])"
     regex: '\bcount\s*-\s*1\b'
-    message: "`count - 1` indicates `count: Int` not `count: Cardinal` (the typed form would not compile per [INFRA-200]). Use `.subtract.saturating(.one)` or the appropriate typed-arithmetic form per [INFRA-025]."
+    message: "`count - 1` (or syntactic equivalents like `count) - 1` cast-outside, `+ 1 < count` algebraic-flip — see cardinal_count_minus_one_evasion) indicates `count: Int` not `count: Cardinal` (the typed form would not compile per [INFRA-200]). Use `.subtract.saturating(.one)` / `.subtract.exact(.one)` / typed `count - .one` per [INFRA-025], or for stdlib-Int sites where no typed surface is available either (α) use the stdlib's named idiom for the concept (`indices.dropLast()`, `.last`, `endIndex - 1`) or (β) escalate to supervisor and apply `// swiftlint:disable:next cardinal_count_minus_one_anti_pattern  // reason: <citation of the math>`."
+    severity: warning
+  # Companion rule (2026-05-06): catches the demonstrated R1 evasion
+  # patterns separately so the message can name them explicitly.
+  #
+  # Pattern 1 — cast-outside:  `count) - 1`
+  #   `Double(seconds.count - 1)` → `(Double(seconds.count) - 1)`
+  #   moves -1 outside the cast; the regex `count\s*-\s*1` doesn't match
+  #   because `)` sits between `count` and `-`.
+  #
+  # Pattern 2 — algebraic-flip:  `+ 1 [<=]+ {expr}.count`
+  #   `lineIndex < count - 1` → `lineIndex + 1 < count`
+  #   `distance == count - 1` → `distance + 1 == count`
+  #   moves -1 to the other side of the comparison; same semantic
+  #   relationship, regex doesn't match because there's no literal
+  #   `count - 1` in the expression.
+  #
+  # Both are regex-evasion in spirit; the rule's intent (don't compute
+  # last-index/count-minus-one inline) covers all syntactic equivalents.
+  # Same severity as the canonical rule; same fix paths.
+  cardinal_count_minus_one_evasion:
+    name: "Cardinal count - 1 — Cast-Outside or Algebraic-Flip Evasion ([INFRA-025])"
+    regex: '\bcount\s*\)\s*-\s*1\b|\+\s*1\s*[<=]+\s*(?:\w+\.)*count\b'
+    message: "Cast-outside (`count) - 1`) or algebraic-flip (`+ 1 < count`, `+ 1 == count`) is regex-evasion of cardinal_count_minus_one_anti_pattern, NOT a fix — semantically identical to the direct `count - 1`, just spelled differently. Use a typed-arithmetic form per [INFRA-025] / [CONV-016], or for stdlib-Int sites use the stdlib's named idiom (`indices.dropLast()`, `.last`, `endIndex - 1`), or escalate to supervisor and apply `// swiftlint:disable:next cardinal_count_minus_one_anti_pattern  // reason: <citation of the math>`."
     severity: warning
   cardinal_zero_one_constructor_anti_pattern:
     name: "Cardinal(0) / Cardinal(1) Anti-Pattern ([INFRA-101])"
