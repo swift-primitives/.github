@@ -79,6 +79,11 @@ jobs:
     permissions:
       contents: read
     steps:
+      - name: Harden runner (audit-mode egress logging)
+        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        with:
+          egress-policy: audit
+
       - uses: actions/checkout@v6
 
       - uses: swift-institute/.github/.github/actions/configure-private-repos@main
@@ -114,6 +119,11 @@ jobs:
     permissions:
       contents: read
     steps:
+      - name: Harden runner (audit-mode egress logging)
+        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        with:
+          egress-policy: audit
+
       - uses: actions/checkout@v6
 
       - uses: swift-institute/.github/.github/actions/configure-private-repos@main
@@ -156,6 +166,11 @@ jobs:
     permissions:
       contents: read
     steps:
+      - name: Harden runner (audit-mode egress logging)
+        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        with:
+          egress-policy: audit
+
       - uses: actions/checkout@v6
 
       - uses: swift-institute/.github/.github/actions/configure-private-repos@main
@@ -198,6 +213,11 @@ jobs:
     permissions:
       contents: read
     steps:
+      - name: Harden runner (audit-mode egress logging)
+        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        with:
+          egress-policy: audit
+
       - uses: actions/checkout@v6
 
       - uses: swift-institute/.github/.github/actions/configure-private-repos@main
@@ -248,6 +268,11 @@ jobs:
       matrix:
         platform: [iOS, tvOS, watchOS, visionOS]
     steps:
+      - name: Harden runner (audit-mode egress logging)
+        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        with:
+          egress-policy: audit
+
       - uses: actions/checkout@v6
 
       - uses: swift-institute/.github/.github/actions/configure-private-repos@main
