@@ -1,0 +1,14 @@
+# Tier 2 — swift-primitives org-specific configuration for swift-linter
+# (the SwiftSyntax-based AST linter at swift-foundations/swift-linter).
+#
+# Activates R5 (`unchecked_call_site`): flags `__unchecked:` argument labels
+# at call sites only — distinguishing call-site uses (anti-pattern per
+# [CONV-016] tier 5) from declaration-site uses (legitimate extension-init
+# machinery per [CONV-001]). The structural distinction is invisible to
+# regex but trivial on the AST.
+#
+# Schema: a flat `rules:` block listing activated rule IDs. `parent_config:`
+# URL chaining mirroring SwiftLint's mechanism is deferred to Phase 2.
+
+rules:
+  - unchecked_call_site
