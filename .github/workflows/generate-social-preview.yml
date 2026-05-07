@@ -78,21 +78,6 @@ jobs:
           echo "accent-to=$(yq '.socialPreview.accent.to' metadata.yaml)" >> "$GITHUB_OUTPUT"
           echo "accent-text=$(yq '.socialPreview.accent.text' metadata.yaml)" >> "$GITHUB_OUTPUT"
           echo "caption=$(yq '.socialPreview.caption' metadata.yaml)" >> "$GITHUB_OUTPUT"
-      - name: DEBUG — probe secret visibility at caller
-        env:
-          APP_ID: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_ID }}
-          PRIVATE_KEY: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_PRIVATE_KEY }}
-        run: |
-          if [ -z "$APP_ID" ]; then
-            echo "::error::SWIFT_INSTITUTE_BOT_APP_ID empty at caller context"
-          else
-            echo "SWIFT_INSTITUTE_BOT_APP_ID present at caller (length=${#APP_ID})"
-          fi
-          if [ -z "$PRIVATE_KEY" ]; then
-            echo "::error::SWIFT_INSTITUTE_BOT_APP_PRIVATE_KEY empty at caller context"
-          else
-            echo "SWIFT_INSTITUTE_BOT_APP_PRIVATE_KEY present at caller (length=${#PRIVATE_KEY})"
-          fi
 
   generate:
     needs: [enumerate, resolve-brand]
@@ -111,4 +96,7 @@ jobs:
       accent-text: ${{ needs.resolve-brand.outputs.accent-text }}
       caption: ${{ needs.resolve-brand.outputs.caption }}
       dry-run: ${{ inputs.dry-run || false }}
-    secrets: inherit
+    secrets:
+      # Cross-org reusables don't inherit; pass explicitly.
+      SWIFT_INSTITUTE_BOT_APP_ID: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_ID }}
+      SWIFT_INSTITUTE_BOT_APP_PRIVATE_KEY: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_PRIVATE_KEY }}
