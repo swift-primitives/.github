@@ -50,8 +50,9 @@ jobs:
           else
             # Filter to:
             #   - public only (Free-plan CI policy per [CI-032])
+            #   - non-archived (per generate-metadata.sh canonical pattern)
             #   - Swift-package repos only (skip .github, *.org infrastructure)
-            repos=$(gh repo list swift-primitives --limit 200 --json name,isPrivate \
+            repos=$(gh repo list swift-primitives --limit 2000 --no-archived --json name,isPrivate \
               --jq '[
                 .[]
                 | select(.isPrivate == false)
