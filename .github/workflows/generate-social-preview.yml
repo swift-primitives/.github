@@ -48,9 +48,17 @@ jobs:
           if [ -n "${{ inputs.repo }}" ]; then
             echo "repos=[\"${{ inputs.repo }}\"]" >> "$GITHUB_OUTPUT"
           else
-            # Filter to public repos only per Free-plan CI policy.
+            # Filter to:
+            #   - public only (Free-plan CI policy per [CI-032])
+            #   - Swift-package repos only (skip .github, *.org infrastructure)
             repos=$(gh repo list swift-primitives --limit 200 --json name,isPrivate \
-              --jq '[.[] | select(.isPrivate == false) | .name]')
+              --jq '[
+                .[]
+                | select(.isPrivate == false)
+                | select(.name | startswith("swift-"))
+                | select(.name | endswith(".org") | not)
+                | .name
+              ]')
             echo "repos=$repos" >> "$GITHUB_OUTPUT"
           fi
 
