@@ -1,0 +1,17 @@
+# swift-primitives org-level metadata.
+#
+# Schema mirrors per-repo .github/metadata.yaml. Per-repo files may declare
+# any subset of these keys; missing keys inherit the org default declared here.
+#
+# Read by sync-metadata.yml (existing) for description/topics/homepage and by
+# generate-social-preview.yml for socialPreview brand defaults.
+
+description: "Atomic building blocks for Swift."
+homepage: "https://swift-institute.org"
+
+socialPreview:
+  accent:
+    from: "#D88751"   # bronze gradient top
+    to: "#A04A1B"     # bronze gradient bottom
+    text: "#A04A1B"   # caption ink
+  caption: "PRIMITIVES"
