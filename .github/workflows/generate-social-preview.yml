@@ -96,7 +96,4 @@ jobs:
       accent-text: ${{ needs.resolve-brand.outputs.accent-text }}
       caption: ${{ needs.resolve-brand.outputs.caption }}
       dry-run: ${{ inputs.dry-run || false }}
-    secrets:
-      # Cross-org reusables don't inherit; pass explicitly.
-      SWIFT_INSTITUTE_BOT_APP_ID: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_ID }}
-      SWIFT_INSTITUTE_BOT_APP_PRIVATE_KEY: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_PRIVATE_KEY }}
+    secrets: inherit  # canonical per swift-ci.yml / swift-docs.yml; the called workflow's declared secrets are passed
