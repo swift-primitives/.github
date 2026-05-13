@@ -115,17 +115,37 @@ custom_rules:
     severity: warning
   chained_rawvalue_access_anti_pattern:
     name: "Chained .rawValue Access Anti-Pattern ([INFRA-103])"
-    regex: '\.rawValue\.\w+'
-    message: "Chaining `.rawValue.method()` (or paren-wrapped `(x.rawValue).method()` — see chained_rawvalue_access_paren_evasion) escapes the typed system. Prefer `.retag()` (Tier 1) / `.map()` (Tier 2) / `Type.min(a, b)` / a typed accessor exposed by the wrapper, per [CONV-016] [INFRA-103]. If the wrapper IS what this site implements (typed-system bottom-out — options (i)-(iv) circular), escalate to supervisor and apply `// swiftlint:disable:next chained_rawvalue_access_anti_pattern  // reason: <citation>`."
+    # TIGHTEN'd 2026-05-13 (per Story 2 cohort dispatch — class-2
+    # disposition): negative-lookahead excludes the canonical stdlib
+    # overflow-aware arithmetic primitives + `magnitude`. Those six
+    # methods ARE the typed system's bottom-out per [INFRA-103] option
+    # (iv) — typed Cardinal/Ordinal/Affine.Discrete arithmetic operators
+    # MUST call them to ground into stdlib UInt arithmetic, and they have
+    # NO typed-system equivalent (the stdlib's overflow-aware unsigned
+    # arithmetic is the bottom). The rule still fires on consumer chains
+    # (`.rawValue.method()`) — only the structural bottom-out is exempted.
+    # Closes 9 sites in the Story 2 cohort:
+    #   - swift-cardinal-primitives (3 sites in Cardinal.swift + Cardinal.Add.swift)
+    #   - swift-ordinal-primitives  (3 sites in Ordinal.Advance.swift)
+    #   - swift-affine-primitives   (3 sites in Affine.Discrete+Arithmetic.swift)
+    # The disable-with-reason mechanism remains the escape hatch for any
+    # future bottom-out method not in the allowlist.
+    regex: '\.rawValue\.(?!(?:addingReportingOverflow|subtractingReportingOverflow|multipliedReportingOverflow|dividedReportingOverflow|remainderReportingOverflow|magnitude)\b)\w+'
+    message: "Chaining `.rawValue.method()` (or paren-wrapped `(x.rawValue).method()` — see chained_rawvalue_access_paren_evasion) escapes the typed system. Prefer `.retag()` (Tier 1) / `.map()` (Tier 2) / `Type.min(a, b)` / a typed accessor exposed by the wrapper, per [CONV-016] [INFRA-103]. The canonical stdlib overflow-aware arithmetic primitives (addingReportingOverflow / subtractingReportingOverflow / multipliedReportingOverflow / dividedReportingOverflow / remainderReportingOverflow) + `magnitude` are exempted as the structural bottom-out (option (iv)). If the wrapper IS what this site implements via a different bottom-out method, escalate to supervisor and apply `// swiftlint:disable:next chained_rawvalue_access_anti_pattern  // reason: <citation>`."
     severity: warning
   # Companion rule (2026-05-06): catches the paren-wrapped evasion pattern
   # `(x.rawValue).method()` separately so the message can name the
   # evasion explicitly. Same severity as the canonical rule; same fix
   # paths (typed accessor or supervisor-approved disable-with-reason).
+  #
+  # TIGHTEN'd 2026-05-13 in lockstep with the canonical rule: same
+  # negative-lookahead allowlist preserves the canonical-vs-evasion
+  # symmetry. Without lockstep TIGHTEN, the paren-evasion form would
+  # remain over-broad relative to its parent rule.
   chained_rawvalue_access_paren_evasion:
     name: "Chained .rawValue — Paren-Wrap Evasion ([INFRA-103])"
-    regex: '\.rawValue\s*\)\.\w+'
-    message: "Paren-wrapping `(x.rawValue).method()` is regex-evasion of chained_rawvalue_access_anti_pattern, NOT a fix — semantically identical to the direct chain. Use a typed accessor exposed by the wrapper (option (iii) of [INFRA-103]) or, if the wrapper IS what this site implements (typed-system bottom-out), escalate to supervisor and apply `// swiftlint:disable:next chained_rawvalue_access_anti_pattern  // reason: <citation>`."
+    regex: '\.rawValue\s*\)\.(?!(?:addingReportingOverflow|subtractingReportingOverflow|multipliedReportingOverflow|dividedReportingOverflow|remainderReportingOverflow|magnitude)\b)\w+'
+    message: "Paren-wrapping `(x.rawValue).method()` is regex-evasion of chained_rawvalue_access_anti_pattern, NOT a fix — semantically identical to the direct chain. Use a typed accessor exposed by the wrapper (option (iii) of [INFRA-103]) or, if the wrapper IS what this site implements (typed-system bottom-out via a method outside the canonical stdlib overflow-aware arithmetic allowlist), escalate to supervisor and apply `// swiftlint:disable:next chained_rawvalue_access_anti_pattern  // reason: <citation>`."
     severity: warning
   bitpattern_rawvalue_chain_anti_pattern:
     name: "init(bitPattern: ....rawValue) Chain Anti-Pattern ([INFRA-002])"
