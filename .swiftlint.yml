@@ -133,6 +133,20 @@ custom_rules:
     # syntactic equivalents — `Int(bitPattern:`, `UInt(bitPattern:`,
     # `Int.init(bitPattern:`, `self.init(bitPattern:`, `Int8(bitPattern:`,
     # etc. — that previously evaded the literal-`Int(` regex.
+    #
+    # TIGHTEN'd 2026-05-13 (per Story 2 cohort dispatch — class-2
+    # disposition): excluded `*Standard Library Integration*` paths,
+    # mirroring the `no_int_bitpattern_arithmetic` precedent. The
+    # [INFRA-002] integration overloads — `Int.init(bitPattern: Cardinal)`,
+    # `Int.init(bitPattern: Ordinal)`, etc. — live by convention in
+    # `Sources/<Module> Standard Library Integration/` per [IMPL-010].
+    # The `Standard_Library_Integration` underscored variant covers
+    # module-name paths. Those sites are the typed-system bottom-out
+    # definitions themselves; the rule's intent is to prevent consumer-side
+    # chaining, not to flag the bottom-out definitions.
     regex: '\b\w+\(bitPattern:\s*[^)]*\.rawValue'
     message: "`init(bitPattern:)` whose argument chains through `.rawValue` — including `Int(...)`, `UInt(...)`, `Int.init(...)`, `self.init(...)`, and other syntactic equivalents — bypasses the canonical preference hierarchy. Prefer `.retag()` / `.map()` (Tier 1/2 of [CONV-016]) before resorting to the [INFRA-002] integration overload — and when you do use the overload, pass the typed value directly: `Int(bitPattern: foo)` not `Int(bitPattern: foo.rawValue)`. If this site IS the [INFRA-002] integration overload definition itself (typed-system bottom-out), escalate to supervisor and apply `// swiftlint:disable:next bitpattern_rawvalue_chain_anti_pattern  // reason: <citation>`."
     severity: warning
+    excluded:
+      - 'Sources/.*Standard_Library_Integration.*'
+      - 'Sources/.*Standard Library Integration.*'
