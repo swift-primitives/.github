@@ -23,7 +23,7 @@
 import Linter
 
 let manifest = Lint.Manifest(
-    enabledRuleIDs: [
+    enabled: [
         "unchecked_call_site",                 // R5
         "cardinal_count_minus_one",            // R1
         "cardinal_zero_one_constructor",       // R2
