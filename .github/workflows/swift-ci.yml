@@ -6,7 +6,7 @@ name: Swift CI (primitives layer)
 # does not (and should not) carry. Currently:
 #   - Embedded build verification: every primitives package MUST be
 #     buildable under `-enable-experimental-feature Embedded` against the
-#     Swift 6.4-dev nightly Linux container. This is the CI manifestation
+#     Swift main nightly Linux container. This is the CI manifestation
 #     of [PRIM-FOUND-001] (Foundation-free) extended into freestanding-
 #     buildability per swift-package-build [PKG-BUILD-007]/[PKG-BUILD-008].
 #     A package that cannot satisfy this invariant is, by that fact, not
@@ -14,7 +14,7 @@ name: Swift CI (primitives layer)
 #
 # The embedded job runs with continue-on-error: true (matches linux-nightly
 # precedent; the embedded job uses the nightly container and inherits its
-# instability profile during the 6.4-dev development window).
+# instability profile while Swift main is in active development).
 #
 # Consume from a caller package's .github/workflows/ci.yml via:
 #
@@ -70,7 +70,7 @@ jobs:
   # Declared first so it appears alongside the universal-matrix builds
   # in the consumer's CI sidebar (rather than orphaned at the bottom).
   embedded:
-    name: Ubuntu (Swift 6.4-dev nightly, Embedded build)
+    name: Ubuntu (Swift main nightly, Embedded build)
     if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     container: swiftlang/swift:nightly-main-jammy
