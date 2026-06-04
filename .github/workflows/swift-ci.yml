@@ -26,9 +26,15 @@ name: Swift CI (primitives layer)
 # Default `enable-private-repos: true` covers the canonical L1 case (most
 # primitives consumers depend on private intra-Institute siblings); pass
 # `with: { enable-private-repos: false }` only for the rare public-only
-# consumer that wants to suppress the configure-git step. `secrets:
-# inherit` is uniform across all consumers per
-# [CI-031]/[CI-058]/[CI-059] post-uniformity-sweep.
+# consumer that wants to suppress the configure-git step. Credential
+# resolution order (see the configure-private-repos composite): per-job
+# swift-institute-bot App installation tokens (contents:read,
+# auto-expiring) minted from the org-level
+# SWIFT_INSTITUTE_BOT_APP_CLIENT_ID/_APP_PRIVATE_KEY secrets; legacy
+# PRIVATE_REPO_TOKEN as github.com-wide fallback. `secrets: inherit` is
+# uniform across all consumers per [CI-031]/[CI-058]/[CI-059]
+# post-uniformity-sweep, so the org-level secrets flow through without
+# per-package ci.yml edits.
 #
 # `enable-embedded-check` is intentionally NOT exposed as an input — embedded
 # buildability is a layer invariant for L1 primitives, not a per-package opt-in.
@@ -55,6 +61,22 @@ on:
     secrets:
       PRIVATE_REPO_TOKEN:
         required: false
+        description: |
+          Legacy github.com-wide fallback credential for private-dep
+          clones. Superseded by the App-token path; retained for orgs
+          not yet provisioned with the App secrets.
+      SWIFT_INSTITUTE_BOT_APP_CLIENT_ID:
+        required: false
+        description: |
+          swift-institute-bot App client ID (org-level secret). With the
+          private key, lets configure-private-repos mint per-job
+          contents:read installation tokens for the layer orgs so
+          `swift package resolve` can clone private intra-Institute deps.
+      SWIFT_INSTITUTE_BOT_APP_PRIVATE_KEY:
+        required: false
+        description: |
+          swift-institute-bot App private key (org-level secret).
+          Counterpart of SWIFT_INSTITUTE_BOT_APP_CLIENT_ID.
 
 # Workflow-level env vars centralize tool versions so each release bump
 # is a single edit instead of N grep-and-replace sites. Per
@@ -89,6 +111,8 @@ jobs:
       - uses: swift-institute/.github/.github/actions/configure-private-repos@main
         with:
           token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          app-client-id: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_CLIENT_ID }}
+          app-private-key: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_PRIVATE_KEY }}
           enabled: ${{ inputs.enable-private-repos }}
 
       - name: Print Swift version
@@ -129,6 +153,8 @@ jobs:
       - uses: swift-institute/.github/.github/actions/configure-private-repos@main
         with:
           token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          app-client-id: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_CLIENT_ID }}
+          app-private-key: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_PRIVATE_KEY }}
           enabled: ${{ inputs.enable-private-repos }}
 
       - name: Print Swift version
@@ -176,6 +202,8 @@ jobs:
       - uses: swift-institute/.github/.github/actions/configure-private-repos@main
         with:
           token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          app-client-id: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_CLIENT_ID }}
+          app-private-key: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_PRIVATE_KEY }}
           enabled: ${{ inputs.enable-private-repos }}
 
       - name: Print Swift version
@@ -223,6 +251,8 @@ jobs:
       - uses: swift-institute/.github/.github/actions/configure-private-repos@main
         with:
           token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          app-client-id: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_CLIENT_ID }}
+          app-private-key: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_PRIVATE_KEY }}
           enabled: ${{ inputs.enable-private-repos }}
 
       - name: Print Swift version
@@ -278,6 +308,8 @@ jobs:
       - uses: swift-institute/.github/.github/actions/configure-private-repos@main
         with:
           token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          app-client-id: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_CLIENT_ID }}
+          app-private-key: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_PRIVATE_KEY }}
           enabled: ${{ inputs.enable-private-repos }}
 
       - name: Select Xcode ${{ env.XCODE_VERSION }}
@@ -324,6 +356,8 @@ jobs:
       macos-runner: ${{ inputs.macos-runner }}
     secrets:
       PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+      SWIFT_INSTITUTE_BOT_APP_CLIENT_ID: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_CLIENT_ID }}
+      SWIFT_INSTITUTE_BOT_APP_PRIVATE_KEY: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_PRIVATE_KEY }}
 
   # ─── Conclusion aggregator ────────────────────────────────────────────────
   # Single required-status-check name for branch protection on swift-primitives
