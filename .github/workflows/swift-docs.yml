@@ -1,0 +1,108 @@
+name: Swift DocC (primitives layer)
+
+# Layer wrapper for swift-institute/.github/.github/workflows/swift-docs.yml.
+#
+# Exists for SECRET TRANSPORT, not layer-specific docs concerns ([CI-004a]
+# extension clause). Org-secret delivery across an org boundary requires
+# explicit forwarding: `secrets: inherit` on a cross-org reusable call
+# delivers no org secrets. Proven empirically 2026-06-04 in one run
+# (swift-byte-primitives run 26959288611): the docs job called
+# swift-institute/.github cross-org with inherit and the composite
+# reported "Configured 0 git url rewrite rule(s)", while the matrix path
+# (same-org wrapper inherit -> cross-org EXPLICIT forwarding) reported
+# "Configured 4". The docs path therefore mirrors the swift-ci.yml matrix
+# pattern: consumers call THIS same-org wrapper with `secrets: inherit`;
+# this wrapper explicit-forwards the private-dep credential set to the
+# universal.
+#
+# Consume from a caller package's .github/workflows/ci.yml via:
+#
+#   jobs:
+#     docs:
+#       uses: swift-primitives/.github/.github/workflows/swift-docs.yml@main
+#       secrets: inherit
+#
+# All umbrella-* inputs are OPTIONAL pass-throughs — when omitted, the
+# universal derives them from `${{ github.event.repository.name }}` (the
+# consumer repo; the event context survives both hops). Pass overrides
+# only when the package layout deviates; see the universal's header for
+# the derivation convention.
+#
+# Chain depth: consumer ci.yml -> this wrapper -> universal swift-docs.yml
+# = 3 levels, within the workflow_call 4-level limit (the universal docs
+# workflow dispatches no further reusables).
+
+on:
+  workflow_call:
+    inputs:
+      umbrella-module:
+        type: string
+        default: ""
+        description: "Override (default: derived from repo name by the universal; preserves acronyms)."
+      umbrella-display-name:
+        type: string
+        default: ""
+        description: "Override (default: derived per convention by the universal)."
+      umbrella-bundle-id:
+        type: string
+        default: ""
+        description: "Override (default: <repo-name>.<DisplayHyphenated>)."
+      umbrella-docc-path:
+        type: string
+        default: ""
+        description: "Override (default: Sources/<Display>/<Display>.docc)."
+      exclude-modules:
+        type: string
+        default: ""
+        description: "Override (default: <Module>_Test_Support)."
+      enable-private-repos:
+        type: boolean
+        default: true
+        description: "If true, configure credentialed git url rewrites (App-token primary, PRIVATE_REPO_TOKEN fallback) for github.com clones during DocC's `swift build`."
+      swift-version:
+        type: string
+        default: "6.3"
+        description: "Swift toolchain version for the DocC build container (swift:<version>)."
+    secrets:
+      PRIVATE_REPO_TOKEN:
+        required: false
+        description: |
+          Legacy github.com-wide fallback credential for private-dep
+          clones. Superseded by the App-token path.
+      SWIFT_INSTITUTE_BOT_APP_CLIENT_ID:
+        required: false
+        description: |
+          swift-institute-bot App Client ID (org-level secret; preferred
+          name era).
+      SWIFT_INSTITUTE_BOT_APP_ID:
+        required: false
+        description: |
+          Legacy-era App ID secret name carried by some orgs (e.g.
+          swift-primitives; numeric App ID value class). client-id wins
+          when both exist.
+      SWIFT_INSTITUTE_BOT_APP_PRIVATE_KEY:
+        required: false
+        description: |
+          swift-institute-bot App private key (org-level secret).
+
+jobs:
+  # Pure routing job: same-org `secrets: inherit` from the consumer lands
+  # the org secrets here; the explicit `secrets:` block below carries the
+  # VALUES across the org boundary to the universal (the hop where
+  # inherit would drop them).
+  docs:
+    if: ${{ !github.event.repository.private }}
+    uses: swift-institute/.github/.github/workflows/swift-docs.yml@main
+    with:
+      umbrella-module: ${{ inputs.umbrella-module }}
+      umbrella-display-name: ${{ inputs.umbrella-display-name }}
+      umbrella-bundle-id: ${{ inputs.umbrella-bundle-id }}
+      umbrella-docc-path: ${{ inputs.umbrella-docc-path }}
+      exclude-modules: ${{ inputs.exclude-modules }}
+      enable-private-repos: ${{ inputs.enable-private-repos }}
+      swift-version: ${{ inputs.swift-version }}
+    secrets:
+      PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+      SWIFT_INSTITUTE_BOT_APP_CLIENT_ID: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_CLIENT_ID }}
+      SWIFT_INSTITUTE_BOT_APP_ID: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_ID }}
+      SWIFT_INSTITUTE_BOT_APP_PRIVATE_KEY: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_PRIVATE_KEY }}
