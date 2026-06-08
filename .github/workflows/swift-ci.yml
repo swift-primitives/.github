@@ -285,76 +285,12 @@ jobs:
       - name: Build (Static Linux musl, x86_64)
         run: swift build --swift-sdk x86_64-swift-linux-musl
 
-  # Apple-platform cross-compile (advisory) — verifies L1 packages
-  # compile cleanly for the iOS/tvOS/watchOS/visionOS Simulators declared
-  # in Package.swift's `platforms:` list. Mirrors swiftpackageindex.com's
-  # compatibility-badge surface so SPI's release-time builds align with
-  # our PR-time feedback. Build-only via `xcodebuild build` (no test
-  # execution; iOS-family Simulator tests would require boot + would not
-  # add signal beyond compile correctness for L1 primitives' pure-compute
-  # surface). Same 4-week classified soak as γ-3 with five-class failure
-  # tracking (package-actionable / toolchain / SDK install / workflow /
-  # known-unsupported). Flip to gating after 2 consecutive clean weekly
-  # sweeps with no package-actionable failures.
-  apple-simulator-build:
-    name: macOS (Swift 6.3, debug, ${{ matrix.platform }} Simulator build)
-    if: ${{ !github.event.repository.private }}
-    runs-on: ${{ inputs.macos-runner }}
-    continue-on-error: true     # advisory; classified soak. Drop after flip.
-    timeout-minutes: 30
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [iOS, tvOS, watchOS, visionOS]
-    steps:
-      - name: Harden runner (audit-mode egress logging)
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
-        with:
-          egress-policy: audit
-
-      - uses: actions/checkout@v6
-
-      - uses: swift-institute/.github/.github/actions/configure-private-repos@main
-        with:
-          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
-          app-client-id: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_CLIENT_ID }}
-          app-id: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_ID }}
-          app-private-key: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_PRIVATE_KEY }}
-          enabled: ${{ inputs.enable-private-repos }}
-
-      - name: Select Xcode ${{ env.XCODE_VERSION }}
-        run: sudo xcode-select -s "/Applications/Xcode_${XCODE_VERSION}.app"
-
-      - name: Print Swift version
-        run: swift --version
-
-      - name: Discover SwiftPM-generated scheme
-        shell: bash
-        run: |
-          set -euo pipefail
-          # SwiftPM auto-generates schemes from Package.swift. Probe via
-          # `xcodebuild -list -json`; fall back to the package name from
-          # `swift package describe`.
-          SCHEME=$(xcodebuild -list -json 2>/dev/null | jq -r '.project.schemes[0] // .workspace.schemes[0] // ""')
-          if [[ -z "$SCHEME" ]]; then
-            SCHEME=$(swift package describe --type json | jq -r '.name')
-          fi
-          if [[ -z "$SCHEME" ]]; then
-            echo "Could not determine scheme name" >&2
-            exit 1
-          fi
-          echo "Discovered scheme: ${SCHEME}"
-          echo "SCHEME=${SCHEME}" >> "$GITHUB_ENV"
-
-      - name: Build (${{ matrix.platform }} Simulator)
-        run: |
-          set -euo pipefail
-          xcodebuild build \
-            -scheme "${SCHEME}" \
-            -destination "generic/platform=${{ matrix.platform }} Simulator" \
-            -quiet
+  # apple-simulator-build was consolidated into the ecosystem-wide universal
+  # matrix (swift-institute/.github swift-ci.yml) on 2026-06-08 per [CI-002]
+  # (Apple-platform shipping is ecosystem-wide, not L1-specific). Consumers
+  # now receive the iOS/tvOS/watchOS/visionOS Simulator legs from the
+  # universal reusable below; the L1-specific cross-compile legs (embedded /
+  # wasm / android / musl) remain here.
 
   # Universal matrix delegated to the ecosystem-wide reusable. Declared
   # after `embedded` so the layer-specific build groups visually with
@@ -381,8 +317,8 @@ jobs:
   #
   # Excluded from needs: by design:
   #   - embedded (continue-on-error: true; nightly toolchain instability)
-  #   - embedded-wasm-sdk, android-build, static-linux-musl-build,
-  #     apple-simulator-build (all continue-on-error: true; advisory soak)
+  #   - embedded-wasm-sdk, android-build, static-linux-musl-build
+  #     (all continue-on-error: true; advisory soak)
   #
   # Branch-protection consumers require `ci-ok` only.
   ci-ok:
