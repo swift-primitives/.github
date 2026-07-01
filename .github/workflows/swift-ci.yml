@@ -113,7 +113,7 @@ jobs:
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: swift-institute/.github/.github/actions/configure-private-repos@main
         with:
@@ -127,7 +127,7 @@ jobs:
         run: swift --version
 
       - name: Cache Swift packages
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: .build
           key: linux-embedded-${{ inputs.cache-key-prefix }}-${{ hashFiles('Package.swift', 'Package@*.swift') }}
@@ -156,7 +156,7 @@ jobs:
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: swift-institute/.github/.github/actions/configure-private-repos@main
         with:
@@ -206,7 +206,7 @@ jobs:
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: swift-institute/.github/.github/actions/configure-private-repos@main
         with:
@@ -256,7 +256,7 @@ jobs:
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: swift-institute/.github/.github/actions/configure-private-repos@main
         with:
