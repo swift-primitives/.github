@@ -1,68 +1,62 @@
-# swift-primitives
+# Swift Primitives
 
-Atomic building blocks for the Swift Institute ecosystem — Layer 1.
+Atomic building blocks for Swift — Layer 1 of the [Swift Institute](https://github.com/swift-institute) ecosystem.
 
 ## What this is
 
-`swift-primitives` is the foundation layer of the
-[Swift Institute](https://github.com/swift-institute) five-layer architecture.
-It hosts small, composable packages that model a single domain each:
-buffer, geometry, algebra, memory, kernel, time, input, index, ordinal,
-cardinal, and many more. Every package is Foundation-free, strictly
-memory-safe, `~Copyable`-aware, and uses typed throws.
+Small, composable packages that each model a single domain: buffer, memory, time, geometry, parsing, rendering, async coordination, and many more. Layer 1 depends on nothing outside the Swift standard library — every package is Foundation-free, strictly memory-safe, `~Copyable`-aware, and uses typed throws. Everything in the higher layers of the ecosystem composes against these packages.
 
-Higher layers depend downward-only: L2 (standards) depends on L1, L3
-(foundations) depends on L1 and L2. L1 depends on nothing outside itself and
-the Swift standard library.
+## Start here
 
-## Layer position
+| Package | What it gives you |
+|---|---|
+| [swift-tagged-primitives](https://github.com/swift-primitives/swift-tagged-primitives) | Phantom-typed value wrappers for zero-cost type safety |
+| [swift-async-primitives](https://github.com/swift-primitives/swift-async-primitives) | Raw async coordination — Channel, Broadcast, Semaphore, Mutex, Barrier, Promise — with `~Copyable` support and typed-throws cancellation |
+| [swift-memory-allocation-primitives](https://github.com/swift-primitives/swift-memory-allocation-primitives) | Allocators that carve a memory region into slots — passthrough System, bump Arena, O(1) fixed-size Pool |
+| [swift-builder-primitives](https://github.com/swift-primitives/swift-builder-primitives) | A shared, macro-free result-builder grammar for declarative element collection |
+| [swift-buffer-primitives](https://github.com/swift-primitives/swift-buffer-primitives) | Buffer types for working with contiguous memory |
+| [swift-render-primitives](https://github.com/swift-primitives/swift-render-primitives) | The core render abstractions behind the ecosystem's HTML, SVG, and PDF output |
 
-| Layer | Organization | Role |
-|-------|--------------|------|
-| 1 | **[swift-primitives](https://github.com/swift-primitives)** (this org) | Atomic building blocks |
-| 2 | [swift-standards](https://github.com/swift-standards) + per-authority orgs | Specification implementations (RFC, ISO, W3C, …) |
-| 3 | [swift-foundations](https://github.com/swift-foundations) | Composed building blocks — IO, HTML, CSS, SVG, PDF, networking |
-| 4 | Components | Opinionated assemblies — planned |
-| 5 | Applications | End-user systems — planned |
+## Browse everything
+
+The [repositories tab](https://github.com/orgs/swift-primitives/repositories) lists every package with its description. Narrow it down:
+
+[buffer](https://github.com/orgs/swift-primitives/repositories?q=buffer) · [memory](https://github.com/orgs/swift-primitives/repositories?q=memory) · [time](https://github.com/orgs/swift-primitives/repositories?q=time) · [geometry](https://github.com/orgs/swift-primitives/repositories?q=geometry) · [parser](https://github.com/orgs/swift-primitives/repositories?q=parser) · [render](https://github.com/orgs/swift-primitives/repositories?q=render) · [async](https://github.com/orgs/swift-primitives/repositories?q=async) · [machine](https://github.com/orgs/swift-primitives/repositories?q=machine)
+
+Packages are ordered in dependency tiers — Tier 0 depends only on the standard library; higher tiers compose lower ones. The full ordering is documented in [Primitives Tiers](https://github.com/swift-primitives/swift-primitives/blob/main/Documentation.docc/Primitives%20Tiers.md).
 
 ## Conventions
 
-Every package in this organization adheres to a shared set of conventions,
-applied at code review time:
+Every package in this organization adheres to a shared set of conventions:
 
-- **Nest.Name naming** — no compound type names; nested accessors over
-  compound methods. `File.Directory.Walk`, never `FileDirectoryWalk`.
+- **Nest.Name naming** — no compound type names; `File.Directory.Walk`, never `FileDirectoryWalk`.
 - **Typed throws end-to-end** — `throws(Domain.Error)`, not `any Error`.
 - **One type per file** — predictable navigation, minimal merge conflicts.
-- **`~Copyable` by default** — types opt INTO `Copyable`, not out of it.
+- **`~Copyable` by default** — types opt into `Copyable`, not out of it.
 - **`~Escapable` for views** — pointer-based views cannot outlive their base.
-- **Foundation-free** — no `import Foundation` anywhere in L1.
-- **Strict memory safety** — `.strictMemorySafety()` enabled on every target;
-  every unsafe-pointer site carries explicit `unsafe` vocabulary.
-- **Multi-target per package** — Core + variants + umbrella; consumers can
-  import the narrow variant they need.
+- **Foundation-free** — no `import Foundation` anywhere in Layer 1.
+- **Strict memory safety** — enabled on every target; every unsafe-pointer site carries explicit `unsafe` vocabulary.
+- **Multi-target per package** — Core + variants + umbrella; import the narrow variant you need.
 
-Each package ships with a DocC catalog documenting the above at type granularity.
+Each package ships with a DocC catalog documenting these at type granularity.
 
-## Where to go next
+## How to use a package
 
-| If you want to... | Go to |
-|-------------------|-------|
-| Read the ecosystem overview | [swift-institute.org](https://swift-institute.org) |
-| Browse the primitives monorepo | [swift-primitives/swift-primitives](https://github.com/swift-primitives/swift-primitives) |
-| Consume a single primitives package | Find it in the list of repositories on this page and add it to your `Package.swift` |
-| Browse design rationale | [swift-institute/Research](https://github.com/swift-institute/Research) |
-| Report a security vulnerability | See the [security policy](https://github.com/swift-primitives/.github/blob/main/SECURITY.md) |
-| Report an issue or contribute | Open an issue or pull request on the relevant package repository |
+Each package is a separate Swift Package Manager package with its own repository — add the one you need directly:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/swift-primitives/swift-tagged-primitives.git", from: "0.1.0")
+]
+```
+
+See each package's README for current products, platforms, and umbrella-vs-variant choices.
 
 ## Status
 
-Initial public alpha. Individual packages are being released repository by
-repository; the layer as a whole is stabilising toward a first coordinated
-milestone.
+Public alpha — packages are stabilising toward a first coordinated milestone.
 
-Maintained by [Coen ten Thije Boonkkamp](https://github.com/coenttb) as a
-sole-contributor project. Contributions via pull request are welcome.
+Maintained by [Coen ten Thije Boonkkamp](https://github.com/coenttb) — contributions welcome via pull request.
 
 ## License
 
