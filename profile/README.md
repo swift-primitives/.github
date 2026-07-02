@@ -6,7 +6,7 @@ Atomic building blocks for the Swift Institute ecosystem — Layer 1.
 
 `swift-primitives` is the foundation layer of the
 [Swift Institute](https://github.com/swift-institute) five-layer architecture.
-It hosts 60+ small, composable packages that model a single domain each:
+It hosts small, composable packages that model a single domain each:
 buffer, geometry, algebra, memory, kernel, time, input, index, ordinal,
 cardinal, and many more. Every package is Foundation-free, strictly
 memory-safe, `~Copyable`-aware, and uses typed throws.
