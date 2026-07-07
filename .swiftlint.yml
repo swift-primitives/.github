@@ -56,13 +56,20 @@ custom_rules:
       - 'Tests/Support/.*\.swift'
   no_foundation_import_warning:
     name: "No Foundation Family Import (advisory)"
+    # §C2 rescope (2026-07-07): scoped to Sources/ (was Tests/). Foundation
+    # in Tests/ is legitimate for round-trip / cross-format verification
+    # (e.g. Codable Foundation-JSON round-trip tests), so this advisory no
+    # longer fires there — retiring the identical Codable-round-trip test
+    # shields. The production ban is unchanged: Sources/ Foundation imports
+    # are gated by `no_foundation_import` (error) above; this warning-tier
+    # shadow of that Sources/ scope is retained per the §C2 instruction
+    # (candidate for outright removal in a follow-up, since it duplicates
+    # the gating rule's surface).
     regex: '^[ \t]*(?:@[a-zA-Z_]+[ \t]+)*(?:public|package|internal|fileprivate|private)?[ \t]*import[ \t]+(Foundation|FoundationEssentials|FoundationInternationalization)\b'
-    message: "Foundation-family imports in Tests/** outside Tests/Support/ are flagged as warnings ([PRIM-FOUND-001], research §3.4.2)."
+    message: "Foundation-family imports are forbidden in Sources/** ([PRIM-FOUND-001], research §3.4.2). Foundation in Tests/ is permitted for round-trip verification."
     severity: warning
     included:
-      - 'Tests/.*\.swift'
-    excluded:
-      - 'Tests/Support/.*\.swift'
+      - 'Sources/.*\.swift'
   l1_no_platform_conditionals:
     name: "L1 Primitives Are Platform-Agnostic ([PLAT-ARCH-008c])"
     regex: '^[ \t]*#(?:if|elseif)\s+(?:!\s*)?(?:os|canImport)\s*\('
