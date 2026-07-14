@@ -58,6 +58,10 @@ on:
         type: string
         default: "macos-26"
         description: "macOS runner image. Bump annually when GitHub adds a new image version. env.* is invalid in runs-on: per Actions context-availability rules — input is the working centralization mechanism."
+      platform-support:
+        type: string
+        default: ""
+        description: "Per-package CI platform-support declaration, passed through verbatim to the universal matrix. Empty default (every existing caller) = full matrix, bit-identical to before this input existed. Non-empty = comma-separated subset of `apple,linux,windows` (lowercase, no spaces). Declare ONLY platform-identity exclusions — a package whose specification or identity excludes a platform; NOT a cost knob and NOT derived from Package.swift `platforms:`. The L1-specific cross-compile legs in THIS wrapper (embedded / wasm / android / musl) are layer invariants and deliberately do NOT consult it. Full semantics: the universal reusable's `platform-support` input doc (swift-institute/.github/.github/workflows/swift-ci.yml)."
     secrets:
       PRIVATE_REPO_TOKEN:
         required: false
@@ -302,6 +306,7 @@ jobs:
       swift-version: ${{ inputs.swift-version }}
       enable-private-repos: ${{ inputs.enable-private-repos }}
       macos-runner: ${{ inputs.macos-runner }}
+      platform-support: ${{ inputs.platform-support }}
     secrets:
       PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
       SWIFT_INSTITUTE_BOT_APP_CLIENT_ID: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_CLIENT_ID }}
