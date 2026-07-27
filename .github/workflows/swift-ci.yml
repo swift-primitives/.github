@@ -38,6 +38,8 @@ name: Swift CI (primitives layer)
 #
 # `enable-embedded-check` is intentionally NOT exposed as an input — embedded
 # buildability is a layer invariant for L1 primitives, not a per-package opt-in.
+# `embedded-target` narrows only the build root for a package whose default trait
+# selects a non-Embedded surface; it does not disable the invariant.
 
 on:
   workflow_call:
@@ -62,6 +64,10 @@ on:
         type: string
         default: ""
         description: "Per-package CI platform-support declaration, passed through verbatim to the universal matrix. Empty default (every existing caller) = full matrix, bit-identical to before this input existed. Non-empty = comma-separated subset of `apple,linux,windows` (lowercase, no spaces). Declare ONLY platform-identity exclusions — a package whose specification or identity excludes a platform; NOT a cost knob and NOT derived from Package.swift `platforms:`. The L1-specific cross-compile legs in THIS wrapper (embedded / wasm / android / musl) are layer invariants and deliberately do NOT consult it. Full semantics: the universal reusable's `platform-support` input doc (swift-institute/.github/.github/workflows/swift-ci.yml)."
+      embedded-target:
+        type: string
+        default: ""
+        description: "Optional target to build for Embedded with default traits disabled. Empty preserves the full-package Embedded build."
     secrets:
       PRIVATE_REPO_TOKEN:
         required: false
@@ -137,7 +143,14 @@ jobs:
           key: linux-embedded-${{ inputs.cache-key-prefix }}-${{ hashFiles('Package.swift', 'Package@*.swift') }}
 
       - name: Build (Embedded)
+        if: ${{ inputs.embedded-target == '' }}
         run: swift build -Xswiftc -enable-experimental-feature -Xswiftc Embedded
+
+      - name: Build target (Embedded, default traits disabled)
+        if: ${{ inputs.embedded-target != '' }}
+        env:
+          EMBEDDED_TARGET: ${{ inputs.embedded-target }}
+        run: swift build --target "$EMBEDDED_TARGET" --disable-default-traits -Xswiftc -enable-experimental-feature -Xswiftc Embedded
 
   # γ-3 advisory — Embedded Wasm SDK build verification on stable Swift 6.3
   # (per swiftlang/swift-syntax precedent: stable, not nightly). 4-week
