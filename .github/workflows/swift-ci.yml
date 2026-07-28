@@ -95,13 +95,24 @@ on:
           swift-institute-bot App private key (org-level secret).
           Counterpart of SWIFT_INSTITUTE_BOT_APP_CLIENT_ID.
 
-# Workflow-level env vars centralize tool versions so each release bump
-# is a single edit instead of N grep-and-replace sites. Per
-# feedback_latest_versions_only.md these MUST track the latest stable
-# release of each tool; bump on every workflow touch where a newer
-# release exists.
-env:
-  XCODE_VERSION: "26.4"
+# No workflow-level `env:` block. This wrapper carried
+# `XCODE_VERSION: "26.4"` until 2026-07-28; it was inert and is deliberately
+# NOT replaced with a synced value. Two reasons, either sufficient:
+#
+#   1. Every job this wrapper defines itself is `runs-on: ubuntu-latest`
+#      (embedded, embedded-wasm-sdk, android-build, static-linux-musl-build).
+#      None of them invokes Xcode.
+#   2. A caller's workflow-level `env:` does NOT cross into a called reusable
+#      workflow, so it never reached the universal's macOS legs either. Proof:
+#      swift-primitives/swift-array-primitives job 86475550287 routed through
+#      this wrapper and selected `/Applications/Xcode_26.6.app` — the
+#      universal's own pin — not 26.4.
+#
+# The Xcode pin is fleet-wide and lives in exactly one place:
+# `swift-institute/.github/.github/workflows/swift-ci.yml`. Re-adding it here
+# would recreate a second source of truth that looks authoritative and does
+# nothing. The sibling wrappers (swift-foundations, swift-standards) have
+# never carried one; this wrapper now matches them.
 
 jobs:
   # L1 invariant: Foundation-free per [PRIM-FOUND-001] +
