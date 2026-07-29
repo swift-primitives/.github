@@ -331,6 +331,14 @@ jobs:
       enable-private-repos: ${{ inputs.enable-private-repos }}
       macos-runner: ${{ inputs.macos-runner }}
       platform-support: ${{ inputs.platform-support }}
+      # The rule bundle an UNCONFIGURED consumer (no root `Lint.swift`) is
+      # linted against. A literal, not an input: the wrapper IS the layer, so a
+      # package cannot elect a weaker set for itself. `universal` is a subset of
+      # `institute` is a subset of `primitives`, so the layer's own bundle is
+      # what keeps an unconfigured package measured against exactly what its
+      # configured peers here already activate. Consumers carrying a
+      # `Lint.swift` never read this. See swift-institute/Workspace#52.
+      lint-bundle: primitives
     secrets:
       PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
       SWIFT_INSTITUTE_BOT_APP_CLIENT_ID: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_CLIENT_ID }}
