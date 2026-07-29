@@ -337,7 +337,7 @@ jobs:
       # `institute` is a subset of `primitives`, so the layer's own bundle is
       # what keeps an unconfigured package measured against exactly what its
       # configured peers here already activate. Consumers carrying a
-      # `Lint.swift` never read this. See swift-institute/Workspace#52.
+      # `Lint.swift` never read this. See swift-institute/Workspace#54.
       lint-bundle: primitives
     secrets:
       PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
