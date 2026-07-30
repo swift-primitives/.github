@@ -46,7 +46,7 @@ on:
     inputs:
       cache-key-prefix:
         type: string
-        default: "swift63-spm-v1"
+        default: "swift63-spm-v2"
         description: "Cache-key prefix, typically '{swift-version tag}-spm-v{cache bump}'. Used only by the embedded job (sole permitted .build cache per [CI-040])."
       swift-version:
         type: string
