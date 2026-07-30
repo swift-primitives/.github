@@ -51,7 +51,7 @@ on:
       swift-version:
         type: string
         default: "6.3"
-        description: "Swift stable floor used for the SDK-install jobs (Wasm, Android, Static-musl) and propagated to the universal matrix. Mirrors the universal reusable's input so callers bumping the floor flip both layer and universal in one input."
+        description: "Swift stable floor used for the SDK-install jobs (Wasm, Android, Static-musl) and propagated to the universal matrix. Mirrors the universal reusable's input so callers bumping the floor flip both layer and universal in one input. Raising it moves embedded-wasm-sdk, android-build, and static-linux-musl-build together with the universal matrix — the swift-institute/.github#67 exit condition is taken as that coupled bump, verified in a single full-tier run, not as a per-job split."
       enable-private-repos:
         type: boolean
         default: true
