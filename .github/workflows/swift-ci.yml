@@ -136,7 +136,7 @@ jobs:
 
       - uses: actions/checkout@v6
 
-      - uses: swift-institute/.github/.github/actions/configure-private-repos@main
+      - uses: swift-institute/.github/.github/actions/configure-private-repos@2830ca1d0339815c49676606fc671ecb3bed3121  # main 2026-07-30, advanced by pin-advance (swift-institute/.github#43)
         with:
           token: ${{ secrets.PRIVATE_REPO_TOKEN }}
           app-client-id: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_CLIENT_ID }}
@@ -186,7 +186,7 @@ jobs:
 
       - uses: actions/checkout@v6
 
-      - uses: swift-institute/.github/.github/actions/configure-private-repos@main
+      - uses: swift-institute/.github/.github/actions/configure-private-repos@2830ca1d0339815c49676606fc671ecb3bed3121  # main 2026-07-30, advanced by pin-advance (swift-institute/.github#43)
         with:
           token: ${{ secrets.PRIVATE_REPO_TOKEN }}
           app-client-id: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_CLIENT_ID }}
@@ -202,7 +202,7 @@ jobs:
       # The composite action handles container-Swift detection, releases.json
       # lookup, URL construction, swift sdk install, and GITHUB_ENV write.
       - name: Install Embedded Wasm SDK matching container Swift
-        uses: swift-institute/.github/.github/actions/install-swift-sdk@main
+        uses: swift-institute/.github/.github/actions/install-swift-sdk@2830ca1d0339815c49676606fc671ecb3bed3121  # main 2026-07-30, advanced by pin-advance (swift-institute/.github#43); pin does not cover the releases.json runtime resolve (expected-tag pins that, adopted at the #67 bump)
         with:
           platform: wasm-sdk
           bundle-suffix: wasm
@@ -236,7 +236,7 @@ jobs:
 
       - uses: actions/checkout@v6
 
-      - uses: swift-institute/.github/.github/actions/configure-private-repos@main
+      - uses: swift-institute/.github/.github/actions/configure-private-repos@2830ca1d0339815c49676606fc671ecb3bed3121  # main 2026-07-30, advanced by pin-advance (swift-institute/.github#43)
         with:
           token: ${{ secrets.PRIVATE_REPO_TOKEN }}
           app-client-id: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_CLIENT_ID }}
@@ -251,7 +251,7 @@ jobs:
       # info.json inspection of the 6.3.1 bundle). Same ABI-pairing
       # constraint as the Wasm SDK.
       - name: Install Android SDK matching container Swift
-        uses: swift-institute/.github/.github/actions/install-swift-sdk@main
+        uses: swift-institute/.github/.github/actions/install-swift-sdk@2830ca1d0339815c49676606fc671ecb3bed3121  # main 2026-07-30, advanced by pin-advance (swift-institute/.github#43); pin does not cover the releases.json runtime resolve (expected-tag pins that, adopted at the #67 bump)
         with:
           platform: android-sdk
           bundle-suffix: android
@@ -286,7 +286,7 @@ jobs:
 
       - uses: actions/checkout@v6
 
-      - uses: swift-institute/.github/.github/actions/configure-private-repos@main
+      - uses: swift-institute/.github/.github/actions/configure-private-repos@2830ca1d0339815c49676606fc671ecb3bed3121  # main 2026-07-30, advanced by pin-advance (swift-institute/.github#43)
         with:
           token: ${{ secrets.PRIVATE_REPO_TOKEN }}
           app-client-id: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_CLIENT_ID }}
@@ -303,7 +303,7 @@ jobs:
       # ${TAG}-substitution leaves it unchanged. The Build step below
       # uses the literal triple directly, so output-env-var is omitted.
       - name: Install Static Linux SDK matching container Swift
-        uses: swift-institute/.github/.github/actions/install-swift-sdk@main
+        uses: swift-institute/.github/.github/actions/install-swift-sdk@2830ca1d0339815c49676606fc671ecb3bed3121  # main 2026-07-30, advanced by pin-advance (swift-institute/.github#43); pin does not cover the releases.json runtime resolve (expected-tag pins that, adopted at the #67 bump)
         with:
           platform: static-sdk
           bundle-suffix: static-linux
