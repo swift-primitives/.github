@@ -54,6 +54,19 @@ custom_rules:
     included:
       - 'Sources/.*\.swift'
       - 'Tests/Support/.*\.swift'
+    # Foundation-Integration leaf-target carve-out (2026-07-30) — per the
+    # architecture doctrine's Foundation-freedom exception ("a target whose
+    # name ends in `Foundation Integration`... may import Foundation, it
+    # must be a leaf product, and no core target may depend on it") and the
+    # coordinator ruling on
+    # swift-primitives/swift-structured-queries-primitives#2
+    # (issuecomment-5132648022). `[^/]*` confines the match to a single
+    # directory component ending in the sanctioned phrase — the target
+    # class, never a per-file waiver. A companion swift-linter rule to
+    # verify the target is actually a leaf (name alone can't prove that) is
+    # tracked separately per the same ruling.
+    excluded:
+      - 'Sources/[^/]* Foundation Integration/.*\.swift'
   no_foundation_import_warning:
     name: "No Foundation Family Import (advisory)"
     # §C2 rescope (2026-07-07): scoped to Sources/ (was Tests/). Foundation
@@ -70,6 +83,12 @@ custom_rules:
     severity: warning
     included:
       - 'Sources/.*\.swift'
+    # Foundation-Integration leaf-target carve-out (2026-07-30) — same
+    # doctrine and ruling as no_foundation_import_error above
+    # (swift-primitives/swift-structured-queries-primitives#2,
+    # issuecomment-5132648022).
+    excluded:
+      - 'Sources/[^/]* Foundation Integration/.*\.swift'
   l1_no_platform_conditionals:
     name: "L1 Primitives Are Platform-Agnostic ([PLAT-ARCH-008c])"
     regex: '^[ \t]*#(?:if|elseif)\s+(?:!\s*)?(?:os|canImport)\s*\('
