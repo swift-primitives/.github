@@ -12,6 +12,19 @@ name: Swift CI (primitives layer)
 #     A package that cannot satisfy this invariant is, by that fact, not
 #     a primitive — it belongs at L2 or L3.
 #
+#     This invariant is verified on TWO deliberately different axes, and
+#     neither leg subsumes the other:
+#       - `embedded` — Embedded-mode restrictions on the HOST triple
+#         (x86_64-unknown-linux-gnu) at the Swift main NIGHTLY toolchain.
+#         What it attests: the package's sources satisfy Embedded-mode
+#         language restrictions under the compiler Swift main will ship.
+#         It is not, and never was, an embedded-TARGET build.
+#       - `embedded-wasm-sdk` — a genuine embedded target
+#         (wasm32-unknown-wasip1 via the Embedded Wasm SDK) at the STABLE
+#         floor. What it attests: embedded-target code generation.
+#     The job names below say exactly which of the two each one is; do not
+#     collapse them, and do not let either name imply the other's coverage.
+#
 # The embedded job runs with continue-on-error: true (matches linux-nightly
 # precedent; the embedded job uses the nightly container and inherits its
 # instability profile while Swift main is in active development).
@@ -46,8 +59,8 @@ on:
     inputs:
       cache-key-prefix:
         type: string
-        default: "swift63-spm-v2"
-        description: "Cache-key prefix, typically '{swift-version tag}-spm-v{cache bump}'. Used only by the embedded job (sole permitted .build cache per [CI-040])."
+        default: ""
+        description: "INERT — accepted and ignored. Formerly keyed the embedded job's `.build` cache, removed 2026-07-31 per swift-institute/.github#161 ([CI-040] is now absolute: no `.build` cache anywhere). The input is retained ONLY so the callers that still pass it do not fail with `Invalid input`; it is scheduled for removal once swift-primitives/swift-kernel-primitives and swift-primitives/swift-lifetime-primitives drop it from their ci.yml. Passing it has no effect."
       swift-version:
         type: string
         default: "6.3"
@@ -120,7 +133,13 @@ jobs:
   # Declared first so it appears alongside the universal-matrix builds
   # in the consumer's CI sidebar (rather than orphaned at the bottom).
   embedded:
-    name: Ubuntu (Swift main nightly, Embedded build)
+    # NAME (swift-institute/.github#161, 2026-07-31): this leg was called
+    # "Ubuntu (Swift main nightly, Embedded build)", which read as an
+    # embedded-target build. It is not one — `swift build` here targets the
+    # host triple x86_64-unknown-linux-gnu with the Embedded feature flag on.
+    # The name now says the predicate the leg actually tests. Embedded-TARGET
+    # attestation is `embedded-wasm-sdk`, below.
+    name: Ubuntu (Swift main nightly, Embedded mode on host triple)
     if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     container: swiftlang/swift:nightly-main-jammy
@@ -147,11 +166,22 @@ jobs:
       - name: Print Swift version
         run: swift --version
 
-      - name: Cache Swift packages
-        uses: actions/cache@v5
-        with:
-          path: .build
-          key: linux-embedded-${{ inputs.cache-key-prefix }}-${{ hashFiles('Package.swift', 'Package@*.swift') }}
+      # NO `.build` CACHE HERE, EVER (swift-institute/.github#161, [CI-040]).
+      # This job used to restore ~84MB of `.build` keyed on
+      # `linux-embedded-<prefix>-<hashFiles(Package.swift)>`. Measured on three
+      # swift-primitives/swift-array-primitives runs: cache hit, then "Build
+      # complete!" in ~10s with ZERO `Compiling` lines. The green attested a
+      # cache restore, not a compile, and the whole nightly-Embedded column was
+      # void as evidence fleet-wide.
+      #
+      # Re-keying does not fix this and must not be attempted. The key hashes
+      # only the manifests, so it is blind to (a) the nightly toolchain — a
+      # `.build` produced under 6.3 satisfied a job running 6.5-dev — and
+      # (b) branch-pinned dependency contents, which move without any manifest
+      # edit. Commit c1c1eaf bumped the key v1 -> v2 for exactly that poisoning
+      # and the leg went green-without-compiling again immediately after.
+      # Under gitignored `Package.resolved` + branch pins, no key can prove the
+      # cache represents the resolved graph. Cold build is the only honest one.
 
       - name: Build (Embedded)
         if: ${{ inputs.embedded-target == '' }}
