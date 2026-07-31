@@ -57,10 +57,6 @@ name: Swift CI (primitives layer)
 on:
   workflow_call:
     inputs:
-      cache-key-prefix:
-        type: string
-        default: ""
-        description: "INERT — accepted and ignored. Formerly keyed the embedded job's `.build` cache, removed 2026-07-31 per swift-institute/.github#161 ([CI-040] is now absolute: no `.build` cache anywhere). The input is retained ONLY so the callers that still pass it do not fail with `Invalid input`; it is scheduled for removal once swift-primitives/swift-kernel-primitives and swift-primitives/swift-lifetime-primitives drop it from their ci.yml. Passing it has no effect."
       swift-version:
         type: string
         default: "6.3"
