@@ -101,6 +101,11 @@ jobs:
       exclude-modules: ${{ inputs.exclude-modules }}
       enable-private-repos: ${{ inputs.enable-private-repos }}
       swift-version: ${{ inputs.swift-version }}
+      # Bind the universal workflow's package checkout to the immutable
+      # caller subject. The central scripts checkout remains anchored to its
+      # own workflow SHA, so this does not broaden PR trust.
+      target-repo: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
+      ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
     secrets:
       PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
       SWIFT_INSTITUTE_BOT_APP_CLIENT_ID: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_CLIENT_ID }}
