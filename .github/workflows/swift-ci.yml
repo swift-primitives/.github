@@ -145,13 +145,13 @@ jobs:
       contents: read
     steps:
       - name: Harden runner (audit-mode egress logging)
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
-      - uses: swift-institute/.github/.github/actions/configure-private-repos@2830ca1d0339815c49676606fc671ecb3bed3121  # main 2026-07-30, advanced by pin-advance (swift-institute/.github#43)
+      - uses: swift-institute/.github/.github/actions/configure-private-repos@1862f98d955f31a11addc7d41d2a3a6cdd87533c  # main 2026-07-30, advanced by pin-advance (swift-institute/.github#43)
         with:
           token: ${{ secrets.PRIVATE_REPO_TOKEN }}
           app-client-id: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_CLIENT_ID }}
@@ -206,13 +206,13 @@ jobs:
       contents: read
     steps:
       - name: Harden runner (audit-mode egress logging)
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
-      - uses: swift-institute/.github/.github/actions/configure-private-repos@2830ca1d0339815c49676606fc671ecb3bed3121  # main 2026-07-30, advanced by pin-advance (swift-institute/.github#43)
+      - uses: swift-institute/.github/.github/actions/configure-private-repos@1862f98d955f31a11addc7d41d2a3a6cdd87533c  # main 2026-07-30, advanced by pin-advance (swift-institute/.github#43)
         with:
           token: ${{ secrets.PRIVATE_REPO_TOKEN }}
           app-client-id: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_CLIENT_ID }}
@@ -228,7 +228,7 @@ jobs:
       # The composite action handles container-Swift detection, releases.json
       # lookup, URL construction, swift sdk install, and GITHUB_ENV write.
       - name: Install Embedded Wasm SDK matching container Swift
-        uses: swift-institute/.github/.github/actions/install-swift-sdk@2830ca1d0339815c49676606fc671ecb3bed3121  # main 2026-07-30, advanced by pin-advance (swift-institute/.github#43); pin does not cover the releases.json runtime resolve (expected-tag pins that, adopted at the #67 bump)
+        uses: swift-institute/.github/.github/actions/install-swift-sdk@1862f98d955f31a11addc7d41d2a3a6cdd87533c  # main 2026-07-30, advanced by pin-advance (swift-institute/.github#43); pin does not cover the releases.json runtime resolve (expected-tag pins that, adopted at the #67 bump)
         with:
           platform: wasm-sdk
           bundle-suffix: wasm
@@ -256,13 +256,13 @@ jobs:
       contents: read
     steps:
       - name: Harden runner (audit-mode egress logging)
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
-      - uses: swift-institute/.github/.github/actions/configure-private-repos@2830ca1d0339815c49676606fc671ecb3bed3121  # main 2026-07-30, advanced by pin-advance (swift-institute/.github#43)
+      - uses: swift-institute/.github/.github/actions/configure-private-repos@1862f98d955f31a11addc7d41d2a3a6cdd87533c  # main 2026-07-30, advanced by pin-advance (swift-institute/.github#43)
         with:
           token: ${{ secrets.PRIVATE_REPO_TOKEN }}
           app-client-id: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_CLIENT_ID }}
@@ -277,7 +277,7 @@ jobs:
       # info.json inspection of the 6.3.1 bundle). Same ABI-pairing
       # constraint as the Wasm SDK.
       - name: Install Android SDK matching container Swift
-        uses: swift-institute/.github/.github/actions/install-swift-sdk@2830ca1d0339815c49676606fc671ecb3bed3121  # main 2026-07-30, advanced by pin-advance (swift-institute/.github#43); pin does not cover the releases.json runtime resolve (expected-tag pins that, adopted at the #67 bump)
+        uses: swift-institute/.github/.github/actions/install-swift-sdk@1862f98d955f31a11addc7d41d2a3a6cdd87533c  # main 2026-07-30, advanced by pin-advance (swift-institute/.github#43); pin does not cover the releases.json runtime resolve (expected-tag pins that, adopted at the #67 bump)
         with:
           platform: android-sdk
           bundle-suffix: android
@@ -306,13 +306,13 @@ jobs:
       contents: read
     steps:
       - name: Harden runner (audit-mode egress logging)
-        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
-      - uses: swift-institute/.github/.github/actions/configure-private-repos@2830ca1d0339815c49676606fc671ecb3bed3121  # main 2026-07-30, advanced by pin-advance (swift-institute/.github#43)
+      - uses: swift-institute/.github/.github/actions/configure-private-repos@1862f98d955f31a11addc7d41d2a3a6cdd87533c  # main 2026-07-30, advanced by pin-advance (swift-institute/.github#43)
         with:
           token: ${{ secrets.PRIVATE_REPO_TOKEN }}
           app-client-id: ${{ secrets.SWIFT_INSTITUTE_BOT_APP_CLIENT_ID }}
@@ -329,7 +329,7 @@ jobs:
       # ${TAG}-substitution leaves it unchanged. The Build step below
       # uses the literal triple directly, so output-env-var is omitted.
       - name: Install Static Linux SDK matching container Swift
-        uses: swift-institute/.github/.github/actions/install-swift-sdk@2830ca1d0339815c49676606fc671ecb3bed3121  # main 2026-07-30, advanced by pin-advance (swift-institute/.github#43); pin does not cover the releases.json runtime resolve (expected-tag pins that, adopted at the #67 bump)
+        uses: swift-institute/.github/.github/actions/install-swift-sdk@1862f98d955f31a11addc7d41d2a3a6cdd87533c  # main 2026-07-30, advanced by pin-advance (swift-institute/.github#43); pin does not cover the releases.json runtime resolve (expected-tag pins that, adopted at the #67 bump)
         with:
           platform: static-sdk
           bundle-suffix: static-linux
